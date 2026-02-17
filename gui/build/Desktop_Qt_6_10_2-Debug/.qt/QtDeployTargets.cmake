@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_DSA_VS_FILE /home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/DSA_VS)
+set(__QT_DEPLOY_TARGET_DSA_VS_TYPE EXECUTABLE)

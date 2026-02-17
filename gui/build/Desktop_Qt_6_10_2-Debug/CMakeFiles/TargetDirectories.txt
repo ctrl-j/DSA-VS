@@ -1,0 +1,9 @@
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/DSA_VS.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/edit_cache.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/rebuild_cache.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/list_install_components.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/install.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/install/local.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/install/strip.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/DSA_VS_autogen_timestamp_deps.dir
+/home/rusty/dev/DSA_VS/build/Desktop_Qt_6_10_2-Debug/CMakeFiles/DSA_VS_autogen.dir

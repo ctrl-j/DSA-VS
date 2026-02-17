@@ -1,0 +1,220 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeDetermineSystem.cmake:200 (message)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      The target system is: Emscripten - 1 - x86
+      The host system is: Linux - 6.17.9-200.fc42.x86_64 - x86_64
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/FindThreads.cmake:99 (CHECK_CXX_SOURCE_COMPILES)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:340 (find_package)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/Qt6Dependencies.cmake:38 (_qt_internal_find_third_party_dependencies)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/Qt6Config.cmake:180 (include)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:333 (find_package)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreDependencies.cmake:20 (find_dependency)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:42 (include)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:315 (find_package)"
+      - "CMakeLists.txt:4 (find_package)"
+    directories:
+      source: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-hdXIRR"
+      binary: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-hdXIRR"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/home/rusty/repos/emsdk/upstream/emscripten/emscan-deps"
+      CMAKE_CXX_FLAGS: "-DQT_QML_DEBUG"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/platforms;/home/rusty/repos/emsdk/upstream/emscripten/cmake/Modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/kwin"
+      QT_ADDITIONAL_PACKAGES_PREFIX_PATH: ""
+      QT_CHAINLOAD_TOOLCHAIN_FILE: ""
+      QT_TOOLCHAIN_INCLUDE_FILE: ""
+      QT_TOOLCHAIN_RELOCATABLE_CMAKE_DIR: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake"
+      QT_TOOLCHAIN_RELOCATABLE_PREFIX: ""
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-hdXIRR'
+        
+        Run Build Command(s): /usr/bin/ninja-build -v cmTC_b971b
+        [1/2] /home/rusty/repos/emsdk/upstream/emscripten/em++ -DCMAKE_HAVE_LIBC_PTHREAD  -DQT_QML_DEBUG -MD -MT CMakeFiles/cmTC_b971b.dir/src.cxx.o -MF CMakeFiles/cmTC_b971b.dir/src.cxx.o.d -o CMakeFiles/cmTC_b971b.dir/src.cxx.o -c /home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-hdXIRR/src.cxx
+        [2/2] : && /home/rusty/repos/emsdk/upstream/emscripten/em++ -DQT_QML_DEBUG  CMakeFiles/cmTC_b971b.dir/src.cxx.o -o cmTC_b971b.js   && :
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/FindWrapAtomic.cmake:36 (check_cxx_source_compiles)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:340 (find_package)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreDependencies.cmake:39 (_qt_internal_find_third_party_dependencies)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:42 (include)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:315 (find_package)"
+      - "CMakeLists.txt:4 (find_package)"
+    checks:
+      - "Performing Test HAVE_STDATOMIC"
+    directories:
+      source: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-LSjGAY"
+      binary: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-LSjGAY"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/home/rusty/repos/emsdk/upstream/emscripten/emscan-deps"
+      CMAKE_CXX_FLAGS: "-DQT_QML_DEBUG"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/platforms;/home/rusty/repos/emsdk/upstream/emscripten/cmake/Modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/kwin"
+      QT_ADDITIONAL_PACKAGES_PREFIX_PATH: ""
+      QT_CHAINLOAD_TOOLCHAIN_FILE: ""
+      QT_TOOLCHAIN_INCLUDE_FILE: ""
+      QT_TOOLCHAIN_RELOCATABLE_CMAKE_DIR: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake"
+      QT_TOOLCHAIN_RELOCATABLE_PREFIX: ""
+    buildResult:
+      variable: "HAVE_STDATOMIC"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-LSjGAY'
+        
+        Run Build Command(s): /usr/bin/ninja-build -v cmTC_a1207
+        [1/2] /home/rusty/repos/emsdk/upstream/emscripten/em++ -DHAVE_STDATOMIC  -DQT_QML_DEBUG -MD -MT CMakeFiles/cmTC_a1207.dir/src.cxx.o -MF CMakeFiles/cmTC_a1207.dir/src.cxx.o.d -o CMakeFiles/cmTC_a1207.dir/src.cxx.o -c /home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-LSjGAY/src.cxx
+        [2/2] : && /home/rusty/repos/emsdk/upstream/emscripten/em++ -DQT_QML_DEBUG  CMakeFiles/cmTC_a1207.dir/src.cxx.o -o cmTC_a1207.js   && :
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/FindWrapRt.cmake:23 (check_cxx_source_compiles)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:340 (find_package)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreDependencies.cmake:39 (_qt_internal_find_third_party_dependencies)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:42 (include)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:315 (find_package)"
+      - "CMakeLists.txt:4 (find_package)"
+    checks:
+      - "Performing Test HAVE_GETTIME"
+    directories:
+      source: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-cZW0mY"
+      binary: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-cZW0mY"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/home/rusty/repos/emsdk/upstream/emscripten/emscan-deps"
+      CMAKE_CXX_FLAGS: "-DQT_QML_DEBUG"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/platforms;/home/rusty/repos/emsdk/upstream/emscripten/cmake/Modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/kwin"
+      QT_ADDITIONAL_PACKAGES_PREFIX_PATH: ""
+      QT_CHAINLOAD_TOOLCHAIN_FILE: ""
+      QT_TOOLCHAIN_INCLUDE_FILE: ""
+      QT_TOOLCHAIN_RELOCATABLE_CMAKE_DIR: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake"
+      QT_TOOLCHAIN_RELOCATABLE_PREFIX: ""
+    buildResult:
+      variable: "HAVE_GETTIME"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-cZW0mY'
+        
+        Run Build Command(s): /usr/bin/ninja-build -v cmTC_d0c63
+        [1/2] /home/rusty/repos/emsdk/upstream/emscripten/em++ -DHAVE_GETTIME  -DQT_QML_DEBUG -MD -MT CMakeFiles/cmTC_d0c63.dir/src.cxx.o -MF CMakeFiles/cmTC_d0c63.dir/src.cxx.o.d -o CMakeFiles/cmTC_d0c63.dir/src.cxx.o -c /home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-cZW0mY/src.cxx
+        [2/2] : && /home/rusty/repos/emsdk/upstream/emscripten/em++ -DQT_QML_DEBUG  CMakeFiles/cmTC_d0c63.dir/src.cxx.o -o cmTC_d0c63.js   && :
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/FindWrapRt.cmake:34 (check_cxx_source_compiles)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:340 (find_package)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreDependencies.cmake:39 (_qt_internal_find_third_party_dependencies)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:42 (include)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:315 (find_package)"
+      - "CMakeLists.txt:4 (find_package)"
+    checks:
+      - "Performing Test HAVE_SHM_OPEN_SHM_UNLINK"
+    directories:
+      source: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-Hea9Ph"
+      binary: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-Hea9Ph"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/home/rusty/repos/emsdk/upstream/emscripten/emscan-deps"
+      CMAKE_CXX_FLAGS: "-DQT_QML_DEBUG"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/platforms;/home/rusty/repos/emsdk/upstream/emscripten/cmake/Modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/kwin"
+      QT_ADDITIONAL_PACKAGES_PREFIX_PATH: ""
+      QT_CHAINLOAD_TOOLCHAIN_FILE: ""
+      QT_TOOLCHAIN_INCLUDE_FILE: ""
+      QT_TOOLCHAIN_RELOCATABLE_CMAKE_DIR: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake"
+      QT_TOOLCHAIN_RELOCATABLE_PREFIX: ""
+    buildResult:
+      variable: "HAVE_SHM_OPEN_SHM_UNLINK"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-Hea9Ph'
+        
+        Run Build Command(s): /usr/bin/ninja-build -v cmTC_ea07b
+        [1/2] /home/rusty/repos/emsdk/upstream/emscripten/em++ -DHAVE_SHM_OPEN_SHM_UNLINK  -DQT_QML_DEBUG -MD -MT CMakeFiles/cmTC_ea07b.dir/src.cxx.o -MF CMakeFiles/cmTC_ea07b.dir/src.cxx.o.d -o CMakeFiles/cmTC_ea07b.dir/src.cxx.o -c /home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-Hea9Ph/src.cxx
+        [2/2] : && /home/rusty/repos/emsdk/upstream/emscripten/em++ -DQT_QML_DEBUG  CMakeFiles/cmTC_ea07b.dir/src.cxx.o -o cmTC_ea07b.js   && :
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules/FindEGL.cmake:128 (check_cxx_source_compiles)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:340 (find_package)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake:40 (_qt_internal_find_third_party_dependencies)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Gui/Qt6GuiConfig.cmake:40 (include)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:333 (find_package)"
+      - "/home/rusty/Qt/Tools/CMake/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:142 (find_dependency)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Widgets/Qt6WidgetsDependencies.cmake:50 (_qt_internal_find_qt_dependencies)"
+      - "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6Widgets/Qt6WidgetsConfig.cmake:40 (include)"
+      - "build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/.qtc/package-manager/maintenance_tool_provider.cmake:315 (find_package)"
+      - "CMakeLists.txt:4 (find_package)"
+    checks:
+      - "Performing Test HAVE_EGL"
+    directories:
+      source: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-477Jjo"
+      binary: "/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-477Jjo"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/home/rusty/repos/emsdk/upstream/emscripten/emscan-deps"
+      CMAKE_CXX_FLAGS: "-DQT_QML_DEBUG"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/platforms;/home/rusty/repos/emsdk/upstream/emscripten/cmake/Modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake/Qt6/3rdparty/kwin"
+      QT_ADDITIONAL_PACKAGES_PREFIX_PATH: ""
+      QT_CHAINLOAD_TOOLCHAIN_FILE: ""
+      QT_TOOLCHAIN_INCLUDE_FILE: ""
+      QT_TOOLCHAIN_RELOCATABLE_CMAKE_DIR: "/home/rusty/Qt/6.10.2/wasm_multithread/lib/cmake"
+      QT_TOOLCHAIN_RELOCATABLE_PREFIX: ""
+    buildResult:
+      variable: "HAVE_EGL"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-477Jjo'
+        
+        Run Build Command(s): /usr/bin/ninja-build -v cmTC_c4a43
+        [1/2] /home/rusty/repos/emsdk/upstream/emscripten/em++ -DHAVE_EGL  -DQT_QML_DEBUG -MD -MT CMakeFiles/cmTC_c4a43.dir/src.cxx.o -MF CMakeFiles/cmTC_c4a43.dir/src.cxx.o.d -o CMakeFiles/cmTC_c4a43.dir/src.cxx.o -c /home/rusty/dev/DSA_VS/build/WebAssembly_Qt_6_10_2_multi_threaded-Debug/CMakeFiles/CMakeScratch/TryCompile-477Jjo/src.cxx
+        [2/2] : && /home/rusty/repos/emsdk/upstream/emscripten/em++ -DQT_QML_DEBUG  CMakeFiles/cmTC_c4a43.dir/src.cxx.o -o cmTC_c4a43.js   && :
+        
+      exitCode: 0
+...
