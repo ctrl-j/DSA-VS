@@ -1,5 +1,9 @@
 do this before starting to code for versioning and stuff
-also make sure to install docker desktop
+
+1. install docker desktop if you haven't
+2. install node version 20, run
+    - nvm install
+    - nvm use
 
 
 docker compose -f infra/docker-compose.yml up -d
@@ -7,3 +11,9 @@ cd backend
 npm install
 cp .env.example .env
 npx prisma migrate dev
+
+
+line 1 sets up postgres/redis and does versioning and ports
+line 2/3 install prisma and dependencies
+line 4 sets up .env
+line 5 creates tables using prisma and postgres, and syncs schema and client
