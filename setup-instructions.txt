@@ -1,0 +1,9 @@
+do this before starting to code for versioning and stuff
+also make sure to install docker desktop
+
+
+docker compose -f infra/docker-compose.yml up -d
+cd backend
+npm install
+cp .env.example .env
+npx prisma migrate dev

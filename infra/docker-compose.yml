@@ -1,0 +1,23 @@
+# run with "docker compose -f infra/docker-compose.yml up -d"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: dsavs-postgres
+    environment:
+      POSTGRES_USER: dsavs
+      POSTGRES_PASSWORD: dsavs
+      POSTGRES_DB: dsavs
+    ports:
+      - "5432:5432"
+    volumes:
+      - dsavs_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: dsavs-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  dsavs_pgdata:
