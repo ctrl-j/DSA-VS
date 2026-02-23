@@ -1,0 +1,38 @@
+# node/npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env vars
+.env
+.env.local
+.env.*.local
+
+# prisma
+prisma/dev.db
+prisma/dev.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# logs
+logs
+*.log
+
+# build output
+dist/
+build/
+out/
+
+# docker
+docker-data/
+*.pid
+
+# editor
+.vscode/
+.idea/
+
+# generated prisma client
+backend/src/generated/prisma/
