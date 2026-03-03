@@ -1,13 +1,59 @@
-class GlobalMatchQueue {
+import { User } from "./user";
+
+interface QueueEntry {
+  user: User;
+  joinedAtMs: number;
+}
+
+interface QueueState {
+  ranked: QueueEntry[];
+  ffa: QueueEntry[];
+}
+
+interface QueueSnapshotEntry {
+  userId: string;
+  username: string;
+  elo: number;
+}
+
+interface RankedPair {
+  mode: "ranked";
+  users: [User, User];
+  matchedAtMs: number;
+}
+
+interface JoinResult {
+  joined: boolean;
+  mode: "ranked" | "ffa";
+  position: number | null;
+  duplicate: boolean;
+  pair: RankedPair | null;
+}
+
+interface LeaveResult {
+  removed: boolean;
+  mode: "ranked" | "ffa" | null;
+}
+
+interface UserQueueState {
+  queued: boolean;
+  mode: "ranked" | "ffa" | null;
+  position: number | null;
+}
+
+export class GlobalMatchQueue {
+  private queues: QueueState;
+  private memberships: Map<string, "ranked" | "ffa">;
+
   constructor() {
     this.queues = {
       ranked: [],
       ffa: [],
     };
-    this.memberships = new Map(); // userId -> mode
+    this.memberships = new Map();
   }
 
-  join(user, mode) {
+  join(user: User, mode: "ranked" | "ffa"): JoinResult {
     this.assertValidMode(mode);
     const existingMode = this.memberships.get(user.userId);
 
@@ -42,7 +88,7 @@ class GlobalMatchQueue {
     };
   }
 
-  leave(userId) {
+  leave(userId: string): LeaveResult {
     const mode = this.memberships.get(userId);
     if (!mode) {
       return { removed: false, mode: null };
@@ -54,30 +100,30 @@ class GlobalMatchQueue {
       queue.splice(index, 1);
     }
     this.memberships.delete(userId);
-    return { 
+    return {
       removed: true,
-      mode
+      mode,
     };
   }
 
-  getUserQueueState(userId) {
+  getUserQueueState(userId: string): UserQueueState {
     const mode = this.memberships.get(userId);
     if (!mode) {
-      return { 
-        queued: false, 
-        mode: null, 
-        position: null
+      return {
+        queued: false,
+        mode: null,
+        position: null,
       };
     }
     const position = this.findPosition(this.queues[mode], userId);
-    return { 
+    return {
       queued: true,
-      mode, 
-      position 
+      mode,
+      position,
     };
   }
 
-  snapshot() {
+  snapshot(): { ranked: QueueSnapshotEntry[]; ffa: QueueSnapshotEntry[] } {
     return {
       ranked: this.queues.ranked.map((entry) => ({
         userId: entry.user.userId,
@@ -92,7 +138,7 @@ class GlobalMatchQueue {
     };
   }
 
-  tryMakeRankedPair() {
+  private tryMakeRankedPair(): RankedPair | null {
     const ranked = this.queues.ranked;
     if (ranked.length < 2) {
       return null;
@@ -117,8 +163,8 @@ class GlobalMatchQueue {
       return null;
     }
 
-    const [first] = ranked.splice(0, 1);
-    const [second] = ranked.splice(matchIndex - 1, 1);
+    const first = ranked.splice(0, 1)[0];
+    const second = ranked.splice(matchIndex - 1, 1)[0];
     this.memberships.delete(first.user.userId);
     this.memberships.delete(second.user.userId);
 
@@ -129,23 +175,24 @@ class GlobalMatchQueue {
     };
   }
 
-  expandingWindow(joinedAtMs, nowMs) {
+  private expandingWindow(joinedAtMs: number, nowMs: number): number {
     const waitMs = Math.max(0, nowMs - joinedAtMs);
-    const waitSteps = Math.floor(waitMs / 10000); // +25 Elo every 10s waiting.
+    const waitSteps = Math.floor(waitMs / 10000);
     const window = 100 + waitSteps * 25;
     return Math.min(window, 400);
   }
 
-  findPosition(queue, userId) {
+  private findPosition(queue: QueueEntry[], userId: string): number | null {
     const index = queue.findIndex((entry) => entry.user.userId === userId);
-    return index >= 0 ? index + 1 : null;
+    if (index >= 0) {
+      return index + 1;
+    }
+    return null;
   }
 
-  assertValidMode(mode) {
+  private assertValidMode(mode: string): void {
     if (mode !== "ranked" && mode !== "ffa") {
       throw new Error("mode must be either 'ranked' or 'ffa'.");
     }
   }
 }
-
-module.exports = { GlobalMatchQueue };

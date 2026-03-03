@@ -1,5 +1,25 @@
-class User {
-  constructor({ userId, username, elo, authenticated }) {
+export interface UserArgs {
+  userId: string;
+  username: string;
+  elo?: number;
+  authenticated?: boolean;
+}
+
+export interface UserPayload {
+  id?: unknown;
+  userId?: unknown;
+  username?: unknown;
+  elo?: unknown;
+  authenticated?: unknown;
+}
+
+export class User {
+  userId: string;
+  username: string;
+  elo: number;
+  authenticated: boolean;
+
+  constructor({ userId, username, elo, authenticated }: UserArgs) {
     this.userId = userId;
     this.username = username;
 
@@ -16,19 +36,19 @@ class User {
     }
   }
 
-  static fromPayload(payload) {
+  static fromPayload(payload: UserPayload | null | undefined): User {
     if (!payload || typeof payload !== "object") {
       throw new Error("User payload is required.");
     }
 
-    let rawId;
+    let rawId: unknown;
     if (payload.userId !== undefined && payload.userId !== null) {
       rawId = payload.userId;
     } else {
       rawId = payload.id;
     }
 
-    let userId;
+    let userId: string;
     if (typeof rawId === "string") {
       userId = rawId.trim();
     } else {
@@ -39,7 +59,7 @@ class User {
       throw new Error("userId is required.");
     }
 
-    let username;
+    let username: string;
     if (typeof payload.username === "string") {
       const trimmedUsername = payload.username.trim();
       if (trimmedUsername) {
@@ -52,7 +72,7 @@ class User {
     }
 
     const parsedElo = Number(payload.elo);
-    let elo;
+    let elo: number;
     if (Number.isFinite(parsedElo)) {
       const flooredElo = Math.floor(parsedElo);
       if (flooredElo < 0) {
@@ -64,7 +84,7 @@ class User {
       elo = 1000;
     }
 
-    let authenticated;
+    let authenticated: boolean;
     if (payload.authenticated) {
       authenticated = true;
     } else {
@@ -79,5 +99,3 @@ class User {
     });
   }
 }
-
-module.exports = { User };
