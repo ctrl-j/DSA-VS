@@ -2,11 +2,11 @@
 #define WINDOW_HH
 
 #include <QMainWindow>
-#include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QTextEdit>
 #include <QPushButton>
+#include <QTextEdit>
+#include <QVBoxLayout>
 
 class Window : public QMainWindow
 {
@@ -30,6 +30,9 @@ private:
     QLabel *lblEmail;
     QTextEdit *texEmail;
 
+    QVBoxLayout *lytError;
+    QLabel *lblErrors[3];
+
     QPushButton *btnSignUp;
 
 public:
@@ -38,5 +41,9 @@ public:
 
     void allocContents();
     void setContents();
+
+    bool validateUsername();
+    bool validatePassword();
+    bool validateEmail();
 };
 #endif // WINDOW_HH
