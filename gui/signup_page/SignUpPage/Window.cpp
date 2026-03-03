@@ -52,12 +52,15 @@ void Window::setContents() {
     lytEmail->addWidget(lblEmail);
     lytEmail->addWidget(texEmail);
 
+    // Add other stuff 1
+
+
     // Setup main layout
     lytMain->addLayout(lytUsername);
     lytMain->addLayout(lytPassword);
     lytMain->addLayout(lytEmail);
 
-    // Add other stuff
+    // Add other stuff 2
 
 
     // Set main layout stuff
