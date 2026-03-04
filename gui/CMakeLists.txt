@@ -10,6 +10,9 @@ qt_add_executable(DSA_VS
     main.cpp
     Window.cpp
     Window.hh
+    userReportDialog.h userReportDialog.cpp
+    bugReportDialog.h bugReportDialog.cpp
+    changePasswordDialog.h changePasswordDialog.cpp
 )
 
 target_link_libraries(DSA_VS
