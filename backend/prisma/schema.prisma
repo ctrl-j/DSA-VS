@@ -7,31 +7,51 @@ datasource db {
 }
 
 model User {
-  id                     String          @id @default(uuid())
-  username               String          @unique
+  id                     String             @id @default(uuid())
+  username               String             @unique
   passwordHash           String
-  elo                    Int             @default(1000)
-  isAdmin                Boolean         @default(false)
-  isBanned               Boolean         @default(false)
-  createdAt              DateTime        @default(now())
-  blocksReceived         Block[]         @relation("Blocked")
-  blocksInitiated        Block[]         @relation("Blocker")
+  elo                    Int                @default(1000)
+  isAdmin                Boolean            @default(false)
+  isBanned               Boolean            @default(false)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  blocksReceived         Block[]            @relation("Blocked")
+  blocksInitiated        Block[]            @relation("Blocker")
   bugReports             BugReport[]
-  receivedFriendRequests FriendRequest[] @relation("FriendRequestReceiver")
-  sentFriendRequests     FriendRequest[] @relation("FriendRequestSender")
-  messagesReceived       Message[]       @relation("MessageReceiver")
-  messagesSent           Message[]       @relation("MessageSender")
+  drafts                 Draft[]
+  matchParticipants      MatchParticipant[]
+  messagesReceived       Message[]          @relation("MessageReceiver")
+  messagesSent           Message[]          @relation("MessageSender")
   profile                Profile?
-  reportsReceived        Report[]        @relation("ReportReported")
-  reportsMade            Report[]        @relation("ReportReporter")
+  receivedFriendRequests FriendRequest[]    @relation("FriendRequestReceiver")
+  reportsMade            Report[]           @relation("ReportReporter")
+  reportsReceived        Report[]           @relation("ReportReported")
+  sentFriendRequests     FriendRequest[]    @relation("FriendRequestSender")
+  sessions               Session[]
+  submissions            Submission[]
 }
 
 model Profile {
-  userId      String  @id
+  userId      String   @id
   displayName String?
   bio         String?
   avatarUrl   String?
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id             String   @id @default(uuid())
+  userId         String
+  tokenHash      String   @unique
+  lastActivityAt DateTime
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model FriendRequest {
@@ -40,6 +60,7 @@ model FriendRequest {
   receiverId  String
   status      FriendRequestStatus @default(PENDING)
   createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   receiver    User                @relation("FriendRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   requester   User                @relation("FriendRequestSender", fields: [requesterId], references: [id], onDelete: Cascade)
 
@@ -59,13 +80,14 @@ model Block {
 }
 
 model Message {
-  id         String   @id @default(uuid())
+  id         String      @id @default(uuid())
   senderId   String
   receiverId String
+  type       MessageType @default(TEXT)
   content    String
-  createdAt  DateTime @default(now())
-  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+  receiver   User        @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User        @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([senderId, receiverId, createdAt])
   @@index([receiverId, createdAt])
@@ -79,6 +101,7 @@ model Report {
   status      ReportStatus @default(OPEN)
   actionTaken String?
   createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   reported    User         @relation("ReportReported", fields: [reportedId], references: [id], onDelete: Cascade)
   reporter    User         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
 
@@ -92,9 +115,106 @@ model BugReport {
   title       String
   description String
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   reporter    User?    @relation(fields: [reporterId], references: [id])
 
   @@index([createdAt])
+}
+
+model Problem {
+  id            String     @id @default(uuid())
+  title         String
+  statement     String
+  difficulty    Difficulty
+  category      String
+  timeLimitMs   Int        @default(2000)
+  memoryLimitMb Int        @default(256)
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  matches       Match[]
+  testCases     TestCase[]
+
+  @@index([difficulty, category, isActive])
+}
+
+model TestCase {
+  id             String   @id @default(uuid())
+  problemId      String
+  input          String
+  expectedOutput String
+  isHidden       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId, isHidden])
+}
+
+model Match {
+  id           String             @id @default(uuid())
+  mode         MatchMode
+  status       MatchStatus        @default(PENDING)
+  problemId    String?
+  startedAt    DateTime?
+  endedAt      DateTime?
+  durationSec  Int?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  drafts       Draft[]
+  participants MatchParticipant[]
+  problem      Problem?           @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  submissions  Submission[]
+
+  @@index([status, createdAt])
+  @@index([mode, createdAt])
+}
+
+model MatchParticipant {
+  matchId        String
+  userId         String
+  startElo       Int
+  endElo         Int?
+  passedCount    Int      @default(0)
+  language       String?
+  reachedPassedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  match          Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([matchId, userId])
+  @@index([userId, createdAt])
+}
+
+model Submission {
+  id         String           @id @default(uuid())
+  matchId    String
+  userId     String
+  language   String
+  code       String
+  status     SubmissionStatus @default(QUEUED)
+  passedCount Int             @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  match      Match            @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([matchId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Draft {
+  matchId   String
+  userId    String
+  code      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([matchId, userId])
+  @@index([updatedAt])
 }
 
 enum FriendRequestStatus {
@@ -106,4 +226,36 @@ enum FriendRequestStatus {
 enum ReportStatus {
   OPEN
   CLOSED
+}
+
+enum MessageType {
+  TEXT
+  CHALLENGE
+  SYSTEM
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MatchMode {
+  RANKED
+  FFA
+  PRIVATE
+}
+
+enum MatchStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
 }

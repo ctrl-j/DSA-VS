@@ -36,3 +36,5 @@ docker-data/
 
 # generated prisma client
 backend/src/generated/prisma/
+
+*.md
