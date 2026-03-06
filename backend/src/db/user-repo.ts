@@ -63,7 +63,7 @@ export async function updateUserElo(userId: string, newElo: number) {
 
 export async function updateProfile(
   userId: string,
-  data: { displayName?: string; bio?: string; avatarUrl?: string }
+  data: { bio?: string; avatarUrl?: string }
 ) {
   return prisma.profile.upsert({
     where: { userId },

@@ -3,6 +3,7 @@ import type { URL } from "node:url";
 import {
   createBugReport,
   getChatsBetweenUsers,
+  getUserByUsername,
   isAdmin,
   reportUser,
   type SafeUser,
@@ -19,12 +20,18 @@ export async function handleReportsAdminRoutes(
 ): Promise<boolean> {
   if (method === "POST" && url.pathname === "/api/reports/users") {
     const body = await readJsonBody(req);
-    const reportedId = getTrimmedString(body.reportedId);
+    const reportedUsername = getTrimmedString(body.reportedUsername);
     const reason = getTrimmedString(body.reason).slice(0, 500);
-    if (!reportedId || !reason) {
-      throw new ApiException(400, "VALIDATION_ERROR", "reportedId and reason are required.");
+    if (!reportedUsername || !reason) {
+      throw new ApiException(400, "VALIDATION_ERROR", "reportedUsername and reason are required.");
     }
 
+    const reported = await getUserByUsername(reportedUsername);
+    if (!reported) {
+      throw new ApiException(404, "NOT_FOUND", "reported user not found.");
+    }
+
+    const reportedId = reported.id;
     const report = await reportUser(currentUser.id, reportedId, reason);
     sendSuccess(res, 201, report);
     return true;
@@ -49,12 +56,20 @@ export async function handleReportsAdminRoutes(
       throw new ApiException(403, "FORBIDDEN", "admin access required.");
     }
 
-    const userId1 = getTrimmedString(url.searchParams.get("userId1"));
-    const userId2 = getTrimmedString(url.searchParams.get("userId2"));
-    if (!userId1 || !userId2) {
-      throw new ApiException(400, "VALIDATION_ERROR", "userId1 and userId2 are required.");
+    const username1 = getTrimmedString(url.searchParams.get("username1"));
+    const username2 = getTrimmedString(url.searchParams.get("username2"));
+    if (!username1 || !username2) {
+      throw new ApiException(400, "VALIDATION_ERROR", "username1 and username2 are required.");
     }
 
+    const user1 = await getUserByUsername(username1);
+    const user2 = await getUserByUsername(username2);
+    if (!user1 || !user2) {
+      throw new ApiException(404, "NOT_FOUND", "one or more users not found.");
+    }
+
+    const userId1 = user1.id;
+    const userId2 = user2.id;
     const chats = await getChatsBetweenUsers(userId1, userId2);
     sendSuccess(res, 200, chats);
     return true;

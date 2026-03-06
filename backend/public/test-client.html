@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSA VS Test Client</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #5f6b7a;
+      --line: #d6d3cd;
+      --accent: #0f766e;
+      --accent-2: #1d4ed8;
+      --danger: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "SF Mono", "Menlo", "Consolas", monospace;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 10%, #ebe7de 0%, rgba(235,231,222,0) 40%),
+        radial-gradient(circle at 80% 90%, #e5ebf5 0%, rgba(229,235,245,0) 45%),
+        var(--bg);
+    }
+    header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(4px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.4px;
+    }
+    header .sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 14px;
+      padding: 14px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent-2);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .full { margin-bottom: 8px; }
+    input, select, textarea, button {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #cbd0d6;
+      padding: 8px 9px;
+      font-family: inherit;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+    textarea { min-height: 74px; resize: vertical; }
+    button {
+      background: #f8fafc;
+      cursor: pointer;
+      border-color: #bfc8d3;
+    }
+    button:hover { border-color: var(--accent-2); }
+    .button-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .button-danger {
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: var(--danger);
+    }
+    .token {
+      word-break: break-all;
+      font-size: 11px;
+      color: var(--muted);
+      margin: 4px 0 10px;
+    }
+    pre {
+      margin: 6px 0 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0b1220;
+      color: #c8d5eb;
+      font-size: 11px;
+      max-height: 240px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .ws-log { max-height: 180px; }
+    .footer-note {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DSA VS Test Client</h1>
+    <div class="sub">Same-origin test harness for backend routes + websocket events.</div>
+  </header>
+
+  <div class="container">
+    <section class="card">
+      <h2>Auth</h2>
+      <div id="tokenView" class="token"></div>
+      <div class="row">
+        <input id="regUsername" placeholder="register username" />
+        <input id="regPassword" placeholder="register password" type="password" />
+      </div>
+      <button id="registerBtn" class="button-primary full">POST /api/auth/register</button>
+      <div class="row">
+        <input id="loginUsername" placeholder="login username" />
+        <input id="loginPassword" placeholder="login password" type="password" />
+      </div>
+      <div class="row">
+        <button id="loginBtn" class="button-primary">POST /api/auth/login</button>
+        <button id="logoutBtn" class="button-danger">POST /api/auth/logout</button>
+      </div>
+      <pre id="authOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Me</h2>
+      <div class="row">
+        <button id="meBtn">GET /api/me</button>
+        <button id="eloBtn">GET /api/me/elo</button>
+      </div>
+      <div class="row-3">
+        <input id="profileBio" placeholder="bio" />
+        <input id="profileAvatar" placeholder="avatarUrl" />
+      </div>
+      <button id="profileBtn" class="full">PATCH /api/me/profile</button>
+      <div class="row">
+        <input id="oldPassword" placeholder="old password" type="password" />
+        <input id="newPassword" placeholder="new password" type="password" />
+      </div>
+      <button id="passwordBtn" class="full">PATCH /api/me/password</button>
+      <pre id="meOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Friends & Blocks</h2>
+      <div class="row">
+        <input id="friendUsername" placeholder="target username" />
+        <button id="friendRequestBtn">POST /api/friends/requests</button>
+      </div>
+      <div class="row-3">
+        <input id="friendRequestId" placeholder="requestId" />
+        <button id="friendAcceptBtn">Accept</button>
+        <button id="friendDeclineBtn">Decline</button>
+      </div>
+      <div class="row">
+        <input id="friendDeleteUsername" placeholder="friend username to remove" />
+        <button id="friendDeleteBtn" class="button-danger">DELETE /api/friends/:username</button>
+      </div>
+      <button id="friendsListBtn" class="full">GET /api/friends</button>
+      <hr />
+      <div class="row">
+        <input id="blockUsername" placeholder="blocked username" />
+        <button id="blockAddBtn">POST /api/blocks</button>
+      </div>
+      <div class="row">
+        <input id="unblockUsername" placeholder="blocked username to unblock" />
+        <button id="blockRemoveBtn" class="button-danger">DELETE /api/blocks/:username</button>
+      </div>
+      <button id="blocksListBtn" class="full">GET /api/blocks</button>
+      <pre id="socialOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Chat + Challenge + Reports</h2>
+      <div class="row">
+        <input id="chatUsername" placeholder="chat username" />
+        <input id="chatContent" placeholder="message content" />
+      </div>
+      <div class="row">
+        <button id="chatSendBtn">POST /api/chats/:username/messages</button>
+        <button id="chatFetchBtn">GET /api/chats/:username/messages</button>
+      </div>
+      <div class="row">
+        <input id="challengeUsername" placeholder="challenge receiver username" />
+        <button id="challengeBtn">POST /api/challenges</button>
+      </div>
+      <div class="row">
+        <input id="reportUsername" placeholder="reported username" />
+        <input id="reportReason" placeholder="reason" />
+      </div>
+      <button id="reportUserBtn" class="full">POST /api/reports/users</button>
+      <div class="row">
+        <input id="bugTitle" placeholder="bug title" />
+        <input id="bugDesc" placeholder="bug description" />
+      </div>
+      <button id="reportBugBtn" class="full">POST /api/reports/bugs</button>
+      <pre id="chatOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Queue + Tasks</h2>
+      <div class="row">
+        <select id="queueMode">
+          <option value="ranked">ranked</option>
+          <option value="ffa">ffa</option>
+        </select>
+        <input id="queueUsername" placeholder="queue username" />
+      </div>
+      <div class="row">
+        <button id="queueJoinBtn">POST /api/queue/join</button>
+        <button id="queueLeaveBtn">POST /api/queue/leave</button>
+      </div>
+      <div class="row">
+        <button id="queueStateBtn">GET /api/queue/state</button>
+        <button id="queueSnapshotBtn">GET /api/queue/snapshot</button>
+      </div>
+      <div class="row">
+        <input id="taskDuration" placeholder="durationMs" value="1200" />
+        <button id="taskSubmitBtn">POST /api/tasks/submit</button>
+      </div>
+      <div class="row">
+        <input id="taskId" placeholder="taskId" />
+        <button id="taskFetchBtn">GET /api/tasks/:id</button>
+      </div>
+      <pre id="queueOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Matches + Leaderboard + Admin</h2>
+      <div class="row-3">
+        <input id="historyLimit" placeholder="limit" value="20" />
+        <input id="historyOffset" placeholder="offset" value="0" />
+        <input id="historyMode" placeholder="mode (ranked/ffa/private)" />
+      </div>
+      <div class="row">
+        <input id="historyCategory" placeholder="category" />
+        <button id="historyBtn">GET /api/matches/history</button>
+      </div>
+      <div class="row">
+        <input id="matchId" placeholder="matchId" />
+        <button id="matchBtn">GET /api/matches/:id</button>
+      </div>
+      <div class="row">
+        <input id="leaderLimit" placeholder="leaderboard limit" value="100" />
+        <button id="leaderBtn">GET /api/leaderboard</button>
+      </div>
+      <div class="row-3">
+        <input id="adminUsername1" placeholder="admin username1" />
+        <input id="adminUsername2" placeholder="admin username2" />
+        <button id="adminChatsBtn">GET /api/admin/chats</button>
+      </div>
+      <pre id="matchOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>WebSocket</h2>
+      <div class="row">
+        <button id="wsConnectBtn" class="button-primary">Connect /ws</button>
+        <button id="wsCloseBtn" class="button-danger">Close WS</button>
+      </div>
+      <div class="row-3">
+        <select id="wsQueueMode">
+          <option value="ranked">ranked</option>
+          <option value="ffa">ffa</option>
+        </select>
+        <button id="wsQueueJoinBtn">queue.join</button>
+        <button id="wsQueueLeaveBtn">queue.leave</button>
+      </div>
+      <div class="row-3">
+        <input id="wsToUser" placeholder="toUsername" />
+        <input id="wsText" placeholder="text/challenge target" />
+        <button id="wsChatSendBtn">chat.send</button>
+      </div>
+      <div class="row-3">
+        <button id="wsChallengeBtn">challenge.send</button>
+        <input id="wsMatchId" placeholder="matchId" />
+        <input id="wsLanguage" placeholder="language" value="cpp" />
+      </div>
+      <textarea id="wsCode" placeholder="submission code"></textarea>
+      <button id="wsSubmissionBtn" class="full">submission.create</button>
+      <pre id="wsOut" class="ws-log"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Raw API Call</h2>
+      <div class="row-3">
+        <select id="rawMethod">
+          <option>GET</option>
+          <option>POST</option>
+          <option>PATCH</option>
+          <option>DELETE</option>
+        </select>
+        <input id="rawPath" placeholder="/api/..." value="/health" />
+        <button id="rawSendBtn">Send</button>
+      </div>
+      <textarea id="rawBody" placeholder='{"key":"value"}'></textarea>
+      <pre id="rawOut"></pre>
+      <div class="footer-note">Tip: if endpoint needs auth, login first so bearer token is attached.</div>
+    </section>
+  </div>
+
+  <script>
+    const tokenView = document.getElementById("tokenView");
+    const state = {
+      token: localStorage.getItem("dsavs_test_token") || "",
+      ws: null,
+    };
+
+    function renderToken() {
+      tokenView.textContent = state.token ? `Bearer token: ${state.token}` : "No auth token yet.";
+    }
+
+    function setToken(token) {
+      state.token = token || "";
+      if (state.token) {
+        localStorage.setItem("dsavs_test_token", state.token);
+      } else {
+        localStorage.removeItem("dsavs_test_token");
+      }
+      renderToken();
+    }
+
+    function pretty(value) {
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch (_error) {
+        return String(value);
+      }
+    }
+
+    function out(id, value) {
+      document.getElementById(id).textContent = pretty(value);
+    }
+
+    async function api(path, method = "GET", body = undefined) {
+      const headers = { "Content-Type": "application/json" };
+      if (state.token) {
+        headers["Authorization"] = `Bearer ${state.token}`;
+      }
+
+      const response = await fetch(path, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+
+      const raw = await response.text();
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (_error) {
+        parsed = raw;
+      }
+
+      return {
+        status: response.status,
+        body: parsed,
+      };
+    }
+
+    function byId(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function wire(id, fn) {
+      document.getElementById(id).addEventListener("click", fn);
+    }
+
+    wire("registerBtn", async () => {
+      const result = await api("/api/auth/register", "POST", {
+        username: byId("regUsername"),
+        password: document.getElementById("regPassword").value,
+      });
+      out("authOut", result);
+    });
+
+    wire("loginBtn", async () => {
+      const result = await api("/api/auth/login", "POST", {
+        username: byId("loginUsername"),
+        password: document.getElementById("loginPassword").value,
+      });
+      if (result.body && result.body.ok && result.body.data && result.body.data.token) {
+        setToken(result.body.data.token);
+      }
+      out("authOut", result);
+    });
+
+    wire("logoutBtn", async () => {
+      const result = await api("/api/auth/logout", "POST", {});
+      setToken("");
+      out("authOut", result);
+    });
+
+    wire("meBtn", async () => out("meOut", await api("/api/me")));
+    wire("eloBtn", async () => out("meOut", await api("/api/me/elo")));
+
+    wire("profileBtn", async () => {
+      const profilePayload = {};
+      const bio = byId("profileBio");
+      const avatarUrl = byId("profileAvatar");
+
+      if (bio) {
+        profilePayload.bio = bio;
+      }
+      if (avatarUrl) {
+        profilePayload.avatarUrl = avatarUrl;
+      }
+
+      const result = await api("/api/me/profile", "PATCH", profilePayload);
+      out("meOut", result);
+    });
+
+    wire("passwordBtn", async () => {
+      const result = await api("/api/me/password", "PATCH", {
+        oldPassword: document.getElementById("oldPassword").value,
+        newPassword: document.getElementById("newPassword").value,
+      });
+      out("meOut", result);
+    });
+
+    wire("friendRequestBtn", async () => {
+      out("socialOut", await api("/api/friends/requests", "POST", { receiverUsername: byId("friendUsername") }));
+    });
+
+    wire("friendAcceptBtn", async () => {
+      const requestId = byId("friendRequestId");
+      out("socialOut", await api(`/api/friends/requests/${requestId}/accept`, "POST", {}));
+    });
+
+    wire("friendDeclineBtn", async () => {
+      const requestId = byId("friendRequestId");
+      out("socialOut", await api(`/api/friends/requests/${requestId}/decline`, "POST", {}));
+    });
+
+    wire("friendDeleteBtn", async () => {
+      const friendUsername = byId("friendDeleteUsername");
+      out("socialOut", await api(`/api/friends/${friendUsername}`, "DELETE"));
+    });
+
+    wire("friendsListBtn", async () => out("socialOut", await api("/api/friends")));
+
+    wire("blockAddBtn", async () => {
+      out("socialOut", await api("/api/blocks", "POST", { blockedUsername: byId("blockUsername") }));
+    });
+
+    wire("blockRemoveBtn", async () => {
+      const blockedUsername = byId("unblockUsername");
+      out("socialOut", await api(`/api/blocks/${blockedUsername}`, "DELETE"));
+    });
+
+    wire("blocksListBtn", async () => out("socialOut", await api("/api/blocks")));
+
+    wire("chatSendBtn", async () => {
+      const username = byId("chatUsername");
+      out("chatOut", await api(`/api/chats/${username}/messages`, "POST", { content: byId("chatContent") }));
+    });
+
+    wire("chatFetchBtn", async () => {
+      const username = byId("chatUsername");
+      out("chatOut", await api(`/api/chats/${username}/messages?limit=50&offset=0`));
+    });
+
+    wire("challengeBtn", async () => {
+      out("chatOut", await api("/api/challenges", "POST", { receiverUsername: byId("challengeUsername") }));
+    });
+
+    wire("reportUserBtn", async () => {
+      out("chatOut", await api("/api/reports/users", "POST", {
+        reportedUsername: byId("reportUsername"),
+        reason: byId("reportReason"),
+      }));
+    });
+
+    wire("reportBugBtn", async () => {
+      out("chatOut", await api("/api/reports/bugs", "POST", {
+        title: byId("bugTitle"),
+        description: byId("bugDesc"),
+      }));
+    });
+
+    wire("queueJoinBtn", async () => {
+      out("queueOut", await api("/api/queue/join", "POST", {
+        mode: document.getElementById("queueMode").value,
+        username: byId("queueUsername"),
+      }));
+    });
+
+    wire("queueLeaveBtn", async () => {
+      out("queueOut", await api("/api/queue/leave", "POST", { username: byId("queueUsername") }));
+    });
+
+    wire("queueStateBtn", async () => {
+      out("queueOut", await api(`/api/queue/state?username=${encodeURIComponent(byId("queueUsername"))}`));
+    });
+
+    wire("queueSnapshotBtn", async () => out("queueOut", await api("/api/queue/snapshot")));
+
+    wire("taskSubmitBtn", async () => {
+      out("queueOut", await api("/api/tasks/submit", "POST", {
+        durationMs: Number(byId("taskDuration")) || 1000,
+      }));
+    });
+
+    wire("taskFetchBtn", async () => {
+      out("queueOut", await api(`/api/tasks/${byId("taskId")}`));
+    });
+
+    wire("historyBtn", async () => {
+      const limit = encodeURIComponent(byId("historyLimit") || "20");
+      const offset = encodeURIComponent(byId("historyOffset") || "0");
+      const category = encodeURIComponent(byId("historyCategory"));
+      const mode = encodeURIComponent(byId("historyMode"));
+      const query = `limit=${limit}&offset=${offset}${category ? `&category=${category}` : ""}${mode ? `&mode=${mode}` : ""}`;
+      out("matchOut", await api(`/api/matches/history?${query}`));
+    });
+
+    wire("matchBtn", async () => {
+      out("matchOut", await api(`/api/matches/${byId("matchId")}`));
+    });
+
+    wire("leaderBtn", async () => {
+      const limit = encodeURIComponent(byId("leaderLimit") || "100");
+      out("matchOut", await api(`/api/leaderboard?limit=${limit}`));
+    });
+
+    wire("adminChatsBtn", async () => {
+      const u1 = encodeURIComponent(byId("adminUsername1"));
+      const u2 = encodeURIComponent(byId("adminUsername2"));
+      out("matchOut", await api(`/api/admin/chats?username1=${u1}&username2=${u2}`));
+    });
+
+    function wsLog(payload) {
+      const node = document.getElementById("wsOut");
+      node.textContent += `${pretty(payload)}\n`;
+      node.scrollTop = node.scrollHeight;
+    }
+
+    function wsSend(event, payload) {
+      if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
+        wsLog({ error: "WS is not connected" });
+        return;
+      }
+      state.ws.send(JSON.stringify({ event, payload }));
+    }
+
+    wire("wsConnectBtn", () => {
+      if (!state.token) {
+        wsLog({ error: "Login first so token is available" });
+        return;
+      }
+      if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        wsLog({ info: "WS already connected" });
+        return;
+      }
+
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${location.host}/ws?token=${encodeURIComponent(state.token)}`;
+      const ws = new WebSocket(wsUrl);
+      state.ws = ws;
+
+      ws.onopen = () => wsLog({ info: "WS connected", wsUrl });
+      ws.onclose = (event) => wsLog({ info: "WS closed", code: event.code, reason: event.reason });
+      ws.onerror = () => wsLog({ error: "WS error" });
+      ws.onmessage = (event) => {
+        try {
+          wsLog(JSON.parse(event.data));
+        } catch (_error) {
+          wsLog({ raw: event.data });
+        }
+      };
+    });
+
+    wire("wsCloseBtn", () => {
+      if (state.ws) {
+        state.ws.close();
+      }
+    });
+
+    wire("wsQueueJoinBtn", () => {
+      wsSend("queue.join", { mode: document.getElementById("wsQueueMode").value });
+    });
+
+    wire("wsQueueLeaveBtn", () => wsSend("queue.leave", {}));
+
+    wire("wsChatSendBtn", () => {
+      wsSend("chat.send", {
+        toUsername: byId("wsToUser"),
+        content: byId("wsText"),
+      });
+    });
+
+    wire("wsChallengeBtn", () => {
+      wsSend("challenge.send", { toUsername: byId("wsToUser") || byId("wsText") });
+    });
+
+    wire("wsSubmissionBtn", () => {
+      wsSend("submission.create", {
+        matchId: byId("wsMatchId"),
+        language: byId("wsLanguage") || "cpp",
+        code: document.getElementById("wsCode").value,
+      });
+    });
+
+    wire("rawSendBtn", async () => {
+      const method = document.getElementById("rawMethod").value;
+      const path = byId("rawPath") || "/health";
+      const bodyText = document.getElementById("rawBody").value.trim();
+      let body;
+      if (bodyText) {
+        try {
+          body = JSON.parse(bodyText);
+        } catch (error) {
+          out("rawOut", { error: "Body must be valid JSON", details: String(error) });
+          return;
+        }
+      }
+      out("rawOut", await api(path, method, body));
+    });
+
+    renderToken();
+  </script>
+</body>
+</html>

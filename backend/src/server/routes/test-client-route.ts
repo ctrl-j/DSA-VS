@@ -4,7 +4,25 @@ import * as path from "node:path";
 import type { URL } from "node:url";
 import { ApiException } from "../types";
 
-const TEST_CLIENT_FILE = path.resolve(__dirname, "../../public/test-client.html");
+function candidateTestClientPaths(): string[] {
+  return [
+    path.resolve(process.cwd(), "public/test-client.html"),
+    path.resolve(__dirname, "../../../public/test-client.html"),
+    path.resolve(__dirname, "../../public/test-client.html"),
+  ];
+}
+
+async function readTestClientHtml(): Promise<string> {
+  for (const filePath of candidateTestClientPaths()) {
+    try {
+      return await fs.readFile(filePath, "utf8");
+    } catch {
+      // Try next candidate path.
+    }
+  }
+
+  throw new ApiException(500, "INTERNAL_ERROR", "Failed to load test client page.");
+}
 
 export async function handleTestClientRoute(
   req: IncomingMessage,
@@ -15,12 +33,8 @@ export async function handleTestClientRoute(
     return false;
   }
 
-  try {
-    const html = await fs.readFile(TEST_CLIENT_FILE, "utf8");
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(html);
-    return true;
-  } catch (_error) {
-    throw new ApiException(500, "INTERNAL_ERROR", "Failed to load test client page.");
-  }
+  const html = await readTestClientHtml();
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+  res.end(html);
+  return true;
 }

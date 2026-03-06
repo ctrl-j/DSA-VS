@@ -51,15 +51,11 @@ export async function handleMeRoutes(
   if (method === "PATCH" && url.pathname === "/api/me/profile") {
     const body = await readJsonBody(req);
 
-    const displayNameRaw = body.displayName;
     const bioRaw = body.bio;
     const avatarUrlRaw = body.avatarUrl;
 
-    const profilePatch: { displayName?: string; bio?: string; avatarUrl?: string } = {};
+    const profilePatch: { bio?: string; avatarUrl?: string } = {};
 
-    if (typeof displayNameRaw === "string") {
-      profilePatch.displayName = displayNameRaw.trim().slice(0, 60);
-    }
     if (typeof bioRaw === "string") {
       profilePatch.bio = bioRaw.trim().slice(0, 500);
     }

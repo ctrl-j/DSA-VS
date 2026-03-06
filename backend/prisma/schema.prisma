@@ -33,7 +33,6 @@ model User {
 
 model Profile {
   userId      String   @id
-  displayName String?
   bio         String?
   avatarUrl   String?
   createdAt   DateTime @default(now())

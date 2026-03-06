@@ -25,12 +25,18 @@ export async function handleFriendsBlocksRoutes(
 ): Promise<boolean> {
   if (method === "POST" && url.pathname === "/api/friends/requests") {
     const body = await readJsonBody(req);
-    const receiverId = getTrimmedString(body.receiverId);
+    const receiverUsername = getTrimmedString(body.receiverUsername);
 
-    if (!receiverId) {
-      throw new ApiException(400, "VALIDATION_ERROR", "receiverId is required.");
+    if (!receiverUsername) {
+      throw new ApiException(400, "VALIDATION_ERROR", "receiverUsername is required.");
     }
 
+    const receiver = await getUserByUsername(receiverUsername);
+    if (!receiver) {
+      throw new ApiException(404, "NOT_FOUND", "receiverUsername not found.");
+    }
+
+    const receiverId = receiver.id;
     const request = await addFriend(currentUser.id, receiverId);
     sendSuccess(res, 200, request);
     return true;
@@ -63,9 +69,19 @@ export async function handleFriendsBlocksRoutes(
   }
 
   if (method === "DELETE" && /^\/api\/friends\/[^/]+$/.test(url.pathname)) {
-    const friendId = url.pathname.split("/")[3] || "";
+    const friendIdentifier = decodeURIComponent(url.pathname.split("/")[3] || "").trim();
+    if (!friendIdentifier) {
+      throw new ApiException(400, "VALIDATION_ERROR", "friend username is required.");
+    }
+
+    const friend = await getUserByUsername(friendIdentifier);
+    if (!friend) {
+      throw new ApiException(404, "NOT_FOUND", "friend user not found.");
+    }
+
+    const friendId = friend.id;
     await removeFriend(currentUser.id, friendId);
-    sendSuccess(res, 200, { removed: true, friendId });
+    sendSuccess(res, 200, { removed: true, friendId, friendIdentifier });
     return true;
   }
 

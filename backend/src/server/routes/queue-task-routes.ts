@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { URL } from "node:url";
 import type { ConcurrentClientHandler } from "../../concurrent-client-handler";
-import { getUserById } from "../../database";
+import { getUserByUsername } from "../../database";
 import type { GlobalMatchQueue } from "../../global-match-queue";
 import { User } from "../../user";
 import { getTrimmedString, readJsonBody, sendSuccess } from "../http-utils";
@@ -26,12 +26,12 @@ export async function handleQueueTaskRoutes(
       throw new ApiException(400, "VALIDATION_ERROR", "mode must be either 'ranked' or 'ffa'.");
     }
 
-    const rawUserId = getTrimmedString(body.userId);
-    if (!rawUserId) {
-      throw new ApiException(400, "VALIDATION_ERROR", "userId is required.");
+    const username = getTrimmedString(body.username);
+    if (!username) {
+      throw new ApiException(400, "VALIDATION_ERROR", "username is required.");
     }
 
-    const userDb = await getUserById(rawUserId);
+    const userDb = await getUserByUsername(username);
     if (!userDb) {
       throw new ApiException(404, "NOT_FOUND", "user not found.");
     }
@@ -52,21 +52,33 @@ export async function handleQueueTaskRoutes(
 
   if (req.method === "POST" && url.pathname === "/api/queue/leave") {
     const body = await readJsonBody(req);
-    const userId = getTrimmedString(body.userId);
-    if (!userId) {
-      throw new ApiException(400, "VALIDATION_ERROR", "userId is required.");
+    const username = getTrimmedString(body.username);
+    if (!username) {
+      throw new ApiException(400, "VALIDATION_ERROR", "username is required.");
     }
 
+    const user = await getUserByUsername(username);
+    if (!user) {
+      throw new ApiException(404, "NOT_FOUND", "user not found.");
+    }
+
+    const userId = user.id;
     sendSuccess(res, 200, globalMatchQueue.leave(userId));
     return true;
   }
 
   if (req.method === "GET" && url.pathname === "/api/queue/state") {
-    const userId = getTrimmedString(url.searchParams.get("userId"));
-    if (!userId) {
-      throw new ApiException(400, "VALIDATION_ERROR", "userId query param is required.");
+    const username = getTrimmedString(url.searchParams.get("username"));
+    if (!username) {
+      throw new ApiException(400, "VALIDATION_ERROR", "username query param is required.");
     }
 
+    const user = await getUserByUsername(username);
+    if (!user) {
+      throw new ApiException(404, "NOT_FOUND", "user not found.");
+    }
+
+    const userId = user.id;
     sendSuccess(res, 200, globalMatchQueue.getUserQueueState(userId));
     return true;
   }

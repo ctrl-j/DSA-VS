@@ -3,6 +3,7 @@ import type { URL } from "node:url";
 import {
   createChallenge,
   getChatHistory,
+  getUserByUsername,
   sendMessage,
   type SafeUser,
 } from "../../database";
@@ -18,14 +19,20 @@ export async function handleChatChallengeRoutes(
   sendToUser: (userId: string, event: string, payload: unknown) => void
 ): Promise<boolean> {
   if (method === "POST" && /^\/api\/chats\/[^/]+\/messages$/.test(url.pathname)) {
-    const targetUserId = url.pathname.split("/")[3] || "";
+    const targetUsername = decodeURIComponent(url.pathname.split("/")[3] || "").trim();
     const body = await readJsonBody(req);
     const content = getTrimmedString(body.content).slice(0, 4000);
 
-    if (!targetUserId || !content) {
+    if (!targetUsername || !content) {
       throw new ApiException(400, "VALIDATION_ERROR", "target user and content are required.");
     }
 
+    const targetUser = await getUserByUsername(targetUsername);
+    if (!targetUser) {
+      throw new ApiException(404, "NOT_FOUND", "target user not found.");
+    }
+
+    const targetUserId = targetUser.id;
     const message = await sendMessage(currentUser.id, targetUserId, content);
     sendSuccess(res, 201, message);
 
@@ -39,10 +46,20 @@ export async function handleChatChallengeRoutes(
   }
 
   if (method === "GET" && /^\/api\/chats\/[^/]+\/messages$/.test(url.pathname)) {
-    const targetUserId = url.pathname.split("/")[3] || "";
+    const targetUsername = decodeURIComponent(url.pathname.split("/")[3] || "").trim();
     const limit = parsePositiveInt(url.searchParams.get("limit"), 50, 1, 200);
     const offset = parsePositiveInt(url.searchParams.get("offset"), 0, 0, 10000);
 
+    if (!targetUsername) {
+      throw new ApiException(400, "VALIDATION_ERROR", "target username is required.");
+    }
+
+    const targetUser = await getUserByUsername(targetUsername);
+    if (!targetUser) {
+      throw new ApiException(404, "NOT_FOUND", "target user not found.");
+    }
+
+    const targetUserId = targetUser.id;
     const history = await getChatHistory(currentUser.id, targetUserId, limit, offset);
     sendSuccess(res, 200, history);
     return true;
@@ -50,11 +67,17 @@ export async function handleChatChallengeRoutes(
 
   if (method === "POST" && url.pathname === "/api/challenges") {
     const body = await readJsonBody(req);
-    const receiverId = getTrimmedString(body.receiverId);
-    if (!receiverId) {
-      throw new ApiException(400, "VALIDATION_ERROR", "receiverId is required.");
+    const receiverUsername = getTrimmedString(body.receiverUsername);
+    if (!receiverUsername) {
+      throw new ApiException(400, "VALIDATION_ERROR", "receiverUsername is required.");
     }
 
+    const receiver = await getUserByUsername(receiverUsername);
+    if (!receiver) {
+      throw new ApiException(404, "NOT_FOUND", "receiver user not found.");
+    }
+
+    const receiverId = receiver.id;
     const challenge = await createChallenge(currentUser.id, receiverId);
     sendSuccess(res, 201, challenge);
 

@@ -11,6 +11,7 @@ import {
   getMatchById,
   getSessionByToken,
   getUserById,
+  getUserByUsername,
   sendMessage,
   updateMatchParticipantProgress,
   updateSubmission,
@@ -301,17 +302,27 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
         return;
       }
 
-      const toUserId = getTrimmedString(event.payload.toUserId);
+      const toUsername = getTrimmedString(event.payload.toUsername);
       const content = getTrimmedString(event.payload.content);
 
-      if (!toUserId || !content) {
+      if (!toUsername || !content) {
         sendWsEvent(socket, "error", {
           code: "VALIDATION_ERROR",
-          message: "toUserId and content are required.",
+          message: "toUsername and content are required.",
         });
         return;
       }
 
+      const toUser = await getUserByUsername(toUsername);
+      if (!toUser) {
+        sendWsEvent(socket, "error", {
+          code: "NOT_FOUND",
+          message: "target user not found.",
+        });
+        return;
+      }
+
+      const toUserId = toUser.id;
       const message = await sendMessage(context.userId, toUserId, content);
 
       sendToUser(toUserId, "chat.received", {
@@ -340,15 +351,25 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
         return;
       }
 
-      const toUserId = getTrimmedString(event.payload.toUserId);
-      if (!toUserId) {
+      const toUsername = getTrimmedString(event.payload.toUsername);
+      if (!toUsername) {
         sendWsEvent(socket, "error", {
           code: "VALIDATION_ERROR",
-          message: "toUserId is required.",
+          message: "toUsername is required.",
         });
         return;
       }
 
+      const toUser = await getUserByUsername(toUsername);
+      if (!toUser) {
+        sendWsEvent(socket, "error", {
+          code: "NOT_FOUND",
+          message: "target user not found.",
+        });
+        return;
+      }
+
+      const toUserId = toUser.id;
       const challenge = await createChallenge(context.userId, toUserId);
       sendToUser(toUserId, "challenge.received", {
         fromUserId: context.userId,
