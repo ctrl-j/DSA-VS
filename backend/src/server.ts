@@ -35,6 +35,16 @@ const wsRuntime = createWsRuntime(globalMatchQueue);
 async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? "/", "http://localhost");
 
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    });
+    res.end();
+    return;
+  }
+
   if (await handleTestClientRoute(req, url, res)) {
     return;
   }

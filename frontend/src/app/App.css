@@ -1,0 +1,64 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #1f2937;
+  background: #f7f7f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.nav a,
+.nav button {
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #111827;
+}
+
+form {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+  margin-bottom: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+input,
+button {
+  padding: 8px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    padding: 12px;
+  }
+}

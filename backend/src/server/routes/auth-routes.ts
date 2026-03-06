@@ -50,6 +50,9 @@ export async function handleAuthRoutes(
     if (!user) {
       throw new ApiException(401, "UNAUTHORIZED", "Invalid username or password.");
     }
+    if (user.isBanned) {
+      throw new ApiException(403, "FORBIDDEN", "This account is banned.");
+    }
 
     const session = await createSessionForUser(user.id);
     sendSuccess(res, 200, {
@@ -58,6 +61,7 @@ export async function handleAuthRoutes(
         id: user.id,
         username: user.username,
         elo: user.elo,
+        isAdmin: user.isAdmin,
       },
       expiresAt: session.expiresAt,
     });

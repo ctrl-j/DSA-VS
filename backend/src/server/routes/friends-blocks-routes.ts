@@ -6,6 +6,7 @@ import {
   blockUser,
   declineFriendRequest,
   getBlockedUsers,
+  getPendingFriendRequests,
   getUserById,
   getUserByUsername,
   getFriends,
@@ -55,6 +56,12 @@ export async function handleFriendsBlocksRoutes(
     const requestId = segments[4] || "";
     const request = await declineFriendRequest(requestId, currentUser.id);
     sendSuccess(res, 200, request);
+    return true;
+  }
+
+  if (method === "GET" && url.pathname === "/api/friends/requests/pending") {
+    const pending = await getPendingFriendRequests(currentUser.id);
+    sendSuccess(res, 200, pending);
     return true;
   }
 

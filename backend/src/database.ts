@@ -50,7 +50,13 @@ export {
   sendMessage,
 } from "./db/chat-repo";
 
-export { createBugReport, reportUser } from "./db/report-repo";
+export {
+  banUserFromReport,
+  createBugReport,
+  getBugReports,
+  getUserReports,
+  reportUser,
+} from "./db/report-repo";
 
 export {
   completeMatch,

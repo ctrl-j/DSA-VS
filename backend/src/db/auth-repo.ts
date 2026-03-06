@@ -16,11 +16,6 @@ export async function registerUser(username: string, passwordRaw: string) {
       username,
       passwordHash,
       elo: 1200,
-      profile: {
-        create: {
-          displayName: username,
-        },
-      },
     },
     select: {
       id: true,

@@ -8,7 +8,12 @@ export function sendJson(
   statusCode: number,
   payload: ApiErrorBody | ApiSuccessBody
 ): void {
-  res.writeHead(statusCode, { "Content-Type": "application/json" });
+  res.writeHead(statusCode, {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+  });
   res.end(JSON.stringify(payload));
 }
 
