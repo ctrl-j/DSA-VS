@@ -1,16 +1,41 @@
 #include "LoginPage.hh"
 
+#include "PageStack.hh"
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QTextEdit>
 #include <QPushButton>
 
-LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
+LoginPage::LoginPage(PageStack *_pageStack, QWidget *parent) : QWidget(parent)
 {
+    pageStack = _pageStack;
+
     allocContents();
     setSizePolicies();
     setContents();
+
+    // Connect the button shit
+    QObject::connect(btnLogin, &QPushButton::clicked,
+                     this, &LoginPage::btnLoginPressed);
+    QObject::connect(btnSignup, &QPushButton::clicked,
+                     this, &LoginPage::btnSignupPressed);
+}
+
+void LoginPage::btnLoginPressed() {
+    QJSEngine *js = pageStack->jsEngine;
+
+    // Set JS properties for username, password
+    js->globalObject().setProperty("username", getUsernameText());
+    js->globalObject().setProperty("password", getPasswordText());
+
+    // Call the backend stuff with the account details
+    QJSValue result = pageStack->jsEngine->evaluate(//insert JS/TS file here);
+}
+
+void LoginPage::btnSignupPressed() {
+    pageStack->setCurrentIndex(PAGE_IDX_SIGNUP);
 }
 
 void LoginPage::allocContents() {

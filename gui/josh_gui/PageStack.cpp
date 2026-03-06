@@ -11,12 +11,15 @@ PageStack::PageStack(QWidget *parent) : QStackedWidget(parent)
     if (initPages()) return;
     if (initStack()) return;
 
+    // Start the javascript engine (accessible by all child widgets via parent pointer)
+    jsEngine = new QJSEngine();
+
     // Always start on the login page
     this->setCurrentIndex(PAGE_IDX_LOGIN);
 }
 
 int PageStack::initPages() {
-    page_login = new LoginPage();
+    page_login = new LoginPage(this);
     page_signup = new SignupPage();
     page_home = new HomePage();
     page_problem = new ProblemPage();

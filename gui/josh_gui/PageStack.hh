@@ -1,6 +1,7 @@
 #ifndef PAGESTACK_HH
 #define PAGESTACK_HH
 
+#include <QJSEngine>
 #include <QStackedWidget>
 
 enum PAGE_IDX {
@@ -17,6 +18,8 @@ class HomePage;
 class ProblemPage;
 class AccountPage;
 
+class QJSEngine;
+
 class PageStack : public QStackedWidget
 {
     Q_OBJECT
@@ -28,6 +31,7 @@ private:
     AccountPage *page_account;
 
 public:
+    QJSEngine *jsEngine;
     PageStack(QWidget *parent = nullptr);
 
     int initPages();
