@@ -2,6 +2,7 @@
 #include "bugreportdialog.h"
 #include "changePasswordDialog.h"
 #include "userReportDialog.h"
+#include "queueJoin.h"
 
 #include <QComboBox>
 #include <QTextDocument>
@@ -188,7 +189,10 @@ void Window::setMainToolbar() {
     tbMainLayout->addStretch(1);
     tbMainLayout->addWidget(btnLeaderboard, Qt::AlignRight | Qt::AlignVCenter);
     tbMainLayout->addWidget(btnAccount, Qt::AlignRight | Qt::AlignVCenter);
-
+    connect(btnAccount, &QPushButton::clicked, this, [this]() {
+        queueJoin *dialog = new queueJoin("your-auth-token-here", this);
+        dialog->exec();
+    });
 
     // Set margins + BG color of the toolbar
     tbMainTools->setStyleSheet("QToolBar { margin: 0px; padding: 0px; background-color:#606060; }");
