@@ -10,6 +10,9 @@ PageStack::PageStack(QWidget *parent) : QStackedWidget(parent)
 {
     if (initPages()) return;
     if (initStack()) return;
+
+    // Always start on the login page
+    this->setCurrentIndex(PAGE_IDX_LOGIN);
 }
 
 int PageStack::initPages() {

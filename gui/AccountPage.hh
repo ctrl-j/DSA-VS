@@ -5,6 +5,7 @@
 
 class AccountPage : public QWidget
 {
+    Q_OBJECT
 public:
     AccountPage(QWidget *parent = nullptr);
 };

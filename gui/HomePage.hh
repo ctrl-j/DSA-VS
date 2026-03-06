@@ -5,6 +5,7 @@
 
 class HomePage : public QWidget
 {
+    Q_OBJECT
 public:
     HomePage(QWidget *parent = nullptr);
 };

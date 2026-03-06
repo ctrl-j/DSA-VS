@@ -7,9 +7,9 @@ class PageStack;
 
 class MainWindow : public QMainWindow
 {
+    Q_OBJECT
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
 
     PageStack *CW;
 };
