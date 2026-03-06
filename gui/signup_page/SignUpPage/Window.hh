@@ -30,8 +30,7 @@ private:
     QLabel *lblEmail;
     QTextEdit *texEmail;
 
-    QVBoxLayout *lytError;
-    QLabel *lblErrors[3];
+    QLabel *lblErrors;
 
     QPushButton *btnSignUp;
 
@@ -40,6 +39,7 @@ public:
     ~Window();
 
     void allocContents();
+    void setSizePolicies();
     void setContents();
 
     bool validateUsername();
