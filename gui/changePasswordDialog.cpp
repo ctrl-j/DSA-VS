@@ -1,5 +1,4 @@
 #include "changePasswordDialog.h"
-#include "ui_changePasswordDialog.h"
 
 changePasswordDialog::changePasswordDialog(QWidget *parent)
     : QDialog(parent)

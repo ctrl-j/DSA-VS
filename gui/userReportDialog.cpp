@@ -1,6 +1,6 @@
 #include "userReportDialog.h"
 
-OptionsDialog::OptionsDialog(QWidget *parent)
+userReportDialog::userReportDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle("Report User");
@@ -32,16 +32,16 @@ OptionsDialog::OptionsDialog(QWidget *parent)
     //grey out confirm option
     confirm->button(QDialogButtonBox::Ok)->setEnabled(false);
     //check and see if an option has been selected
-    connect(cheating, &QCheckBox::checkStateChanged, this, &OptionsDialog::checkSelection);
-    connect(leftGame, &QCheckBox::checkStateChanged, this, &OptionsDialog::checkSelection);
-    connect(chatAbuse, &QCheckBox::checkStateChanged, this, &OptionsDialog::checkSelection);
-    connect(offensiveName, &QCheckBox::checkStateChanged, this, &OptionsDialog::checkSelection);
+    connect(cheating, &QCheckBox::checkStateChanged, this, &userReportDialog::checkSelection);
+    connect(leftGame, &QCheckBox::checkStateChanged, this, &userReportDialog::checkSelection);
+    connect(chatAbuse, &QCheckBox::checkStateChanged, this, &userReportDialog::checkSelection);
+    connect(offensiveName, &QCheckBox::checkStateChanged, this, &userReportDialog::checkSelection);
 
     connect(confirm, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(confirm, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
-void OptionsDialog::checkSelection()
+void userReportDialog::checkSelection()
 {
     bool checked = cheating->isChecked() ||
                    leftGame->isChecked() ||
@@ -50,5 +50,5 @@ void OptionsDialog::checkSelection()
     confirm->button(QDialogButtonBox::Ok)->setEnabled(checked);
 }
 
-OptionsDialog::~OptionsDialog()
+userReportDialog::~userReportDialog()
 {}

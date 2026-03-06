@@ -1,4 +1,7 @@
 #include "Window.hh"
+#include "bugreportdialog.h"
+#include "changePasswordDialog.h"
+#include "userReportDialog.h"
 
 #include <QComboBox>
 #include <QTextDocument>
@@ -25,6 +28,12 @@ Window::Window(QWidget *parent)
     // Window configuration
     resize(QSize(800, 600));
     show();
+    //tests
+    changePasswordDialog changeDialog(this);
+    changeDialog.exec();
+
+    userReportDialog reportDialog(this);
+    reportDialog.exec();
 }
 
 void Window::allocContents() {
@@ -119,7 +128,19 @@ UI_STATUS Window::setProblemPane() {
 
     // Add the label aligned at the top left corner of the container
     lytProblem->addWidget(lblProblem, 0, Qt::AlignLeft | Qt::AlignTop);
+    lytProblem->addStretch(1);
 
+    // Bug report button
+    QPushButton *btnBugReport = new QPushButton("Report a Bug", problemContainer);
+    btnBugReport->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lytProblem->addWidget(btnBugReport, 0, Qt::AlignLeft);
+
+    connect(btnBugReport, &QPushButton::clicked, this, [this]() {
+        bugReportDialog dialog(this);
+        if (dialog.exec() == QDialog::Accepted) {
+            // Handle submission — send to server,
+        }
+    });
     return OK;
 }
 

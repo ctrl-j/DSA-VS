@@ -9,13 +9,13 @@
 #include <QPushButton>
 
 
-class OptionsDialog : public QDialog
+class userReportDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit OptionsDialog(QWidget *parent = nullptr);
-    ~OptionsDialog();
+    explicit userReportDialog(QWidget *parent = nullptr);
+    ~userReportDialog();
     bool isCheatingChecked() const { return cheating->isChecked(); }
     bool isLeftGameChecked() const { return leftGame->isChecked(); }
     bool isChatAbuseChecked() const { return chatAbuse->isChecked(); }

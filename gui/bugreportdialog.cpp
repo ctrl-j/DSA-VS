@@ -1,5 +1,4 @@
 #include "bugReportDialog.h"
-#include "ui_bugReportDialog.h"
 
 bugReportDialog::bugReportDialog(QWidget *parent)
     : QDialog(parent)
