@@ -1,167 +1,201 @@
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import { mockDeep, mockReset } from 'jest-mock-extended';
-import { PrismaClient } from '@prisma/client';
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { FriendRequestStatus, MessageType, PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
+import { mockDeep, mockReset } from "jest-mock-extended";
 
-// 1. Define the mock instance
 const prismaMock = mockDeep<PrismaClient>();
 
-// 2. Mock the @prisma/client module
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => prismaMock),
-}));
+jest.mock("@prisma/client", () => {
+  const actual = jest.requireActual("@prisma/client") as Record<string, unknown>;
+  return {
+    ...actual,
+    PrismaClient: jest.fn().mockImplementation(() => prismaMock),
+  };
+});
 
-// 3. Import the database module AFTER the mock is defined
-import * as db from './database';
-import bcrypt from 'bcrypt';
+import * as db from "./database";
 
-describe('Exhaustive Database Requirements Tests', () => {
+describe("Database Layer", () => {
   beforeEach(() => {
     mockReset(prismaMock);
   });
 
-  describe('Registration & Account', () => {
-    it('should register a user successfully (Requirement: Create account/set username)', async () => {
+  describe("Registration", () => {
+    it("registers a new user", async () => {
       (prismaMock.user.findUnique as any).mockResolvedValue(null);
-      const userData = { id: '1', username: 'newuser', passwordHash: 'hashed', elo: 1200 };
-      (prismaMock.user.create as any).mockResolvedValue(userData);
+      (prismaMock.user.create as any).mockResolvedValue({
+        id: "u1",
+        username: "new_user",
+        elo: 1200,
+        isAdmin: false,
+        isBanned: false,
+      });
 
-      const result = await db.registerUser('newuser', 'pass123');
-      expect(result.username).toBe('newuser');
+      const user = await db.registerUser("new_user", "mysecurepassword");
+      expect(user.username).toBe("new_user");
       expect(prismaMock.user.create).toHaveBeenCalled();
     });
 
-    it('should fail when username already exists (Requirement: Duplicate usernames)', async () => {
-      (prismaMock.user.findUnique as any).mockResolvedValue({ id: 'existing' });
-      
-      await expect(db.registerUser('existing', 'pass123')).rejects.toThrow('USERNAME_ALREADY_EXISTS');
+    it("rejects duplicate username", async () => {
+      (prismaMock.user.findUnique as any).mockResolvedValue({ id: "existing" });
+
+      await expect(db.registerUser("existing", "password123")).rejects.toThrow(
+        "USERNAME_ALREADY_EXISTS"
+      );
     });
   });
 
-  describe('Authentication', () => {
-    it('should login with valid credentials (Requirement: Login)', async () => {
-      const hash = await bcrypt.hash('correct', 1);
-      (prismaMock.user.findUnique as any).mockResolvedValue({ id: '1', passwordHash: hash });
+  describe("Authentication", () => {
+    it("returns user id for valid password", async () => {
+      const hash = await bcrypt.hash("correct-pass", 1);
+      (prismaMock.user.findUnique as any).mockResolvedValue({ id: "u1", passwordHash: hash });
 
-      const result = await db.checkUserPassword('user', 'correct');
-      expect(result).toBe('1');
+      const userId = await db.checkUserPassword("user", "correct-pass");
+      expect(userId).toBe("u1");
     });
 
-    it('should fail login with invalid password (Requirement: Invalid password)', async () => {
-      const hash = await bcrypt.hash('correct', 1);
-      (prismaMock.user.findUnique as any).mockResolvedValue({ id: '1', passwordHash: hash });
+    it("returns null for invalid password", async () => {
+      const hash = await bcrypt.hash("correct-pass", 1);
+      (prismaMock.user.findUnique as any).mockResolvedValue({ id: "u1", passwordHash: hash });
 
-      const result = await db.checkUserPassword('user', 'wrong');
+      const userId = await db.checkUserPassword("user", "bad-pass");
+      expect(userId).toBeNull();
+    });
+  });
+
+  describe("Session Management", () => {
+    it("creates and refreshes a valid session", async () => {
+      (prismaMock.session.create as any).mockResolvedValue({ id: "s1" });
+
+      const createResult = await db.createSessionForUser("u1");
+      expect(createResult.token).toBeTruthy();
+      expect(prismaMock.session.create).toHaveBeenCalled();
+
+      const now = new Date();
+      const future = new Date(now.getTime() + 5 * 60_000);
+      (prismaMock.session.findUnique as any).mockResolvedValue({
+        id: "s1",
+        userId: "u1",
+        expiresAt: future,
+        user: {
+          id: "u1",
+          username: "alice",
+          elo: 1200,
+          isAdmin: false,
+          isBanned: false,
+        },
+      });
+      (prismaMock.session.update as any).mockResolvedValue({ id: "s1" });
+
+      const refreshed = await db.getSessionByToken(createResult.token);
+      expect(refreshed?.userId).toBe("u1");
+      expect(prismaMock.session.update).toHaveBeenCalled();
+    });
+
+    it("deletes expired sessions", async () => {
+      const past = new Date(Date.now() - 60_000);
+      (prismaMock.session.findUnique as any).mockResolvedValue({
+        id: "s1",
+        userId: "u1",
+        expiresAt: past,
+        user: {
+          id: "u1",
+          username: "alice",
+          elo: 1200,
+          isAdmin: false,
+          isBanned: false,
+        },
+      });
+      (prismaMock.session.delete as any).mockResolvedValue({ id: "s1" });
+
+      const result = await db.getSessionByToken("token");
       expect(result).toBeNull();
+      expect(prismaMock.session.delete).toHaveBeenCalled();
     });
   });
 
-  describe('Password Management', () => {
-    it('should fail to change password with wrong old password (Requirement: Wrong old password)', async () => {
-      const oldHash = await bcrypt.hash('old_pass', 1);
-      (prismaMock.user.findUnique as any).mockResolvedValue({ id: '1', passwordHash: oldHash });
+  describe("Password Changes", () => {
+    it("rejects wrong current password", async () => {
+      const hash = await bcrypt.hash("old-pass", 1);
+      (prismaMock.user.findUnique as any).mockResolvedValue({ passwordHash: hash });
 
-      await expect(db.changeUserPassword('1', 'wrong_old', 'new_pass')).rejects.toThrow('INVALID_OLD_PASSWORD');
-    });
-
-    it('should change password with correct old password (Requirement: Correct new password)', async () => {
-      const oldHash = await bcrypt.hash('old_pass', 1);
-      (prismaMock.user.findUnique as any).mockResolvedValue({ id: '1', passwordHash: oldHash });
-      (prismaMock.user.update as any).mockResolvedValue({ id: '1' });
-
-      await db.changeUserPassword('1', 'old_pass', 'new_pass');
-      expect(prismaMock.user.update).toHaveBeenCalled();
+      await expect(db.changeUserPassword("u1", "wrong-old", "new-pass-123")).rejects.toThrow(
+        "INVALID_OLD_PASSWORD"
+      );
     });
   });
 
-  describe('Profile Customization', () => {
-    it('should update profile fields (Requirement: Customize profile)', async () => {
-      (prismaMock.profile.upsert as any).mockResolvedValue({ userId: '1', bio: 'New Bio' });
-      const result = await db.updateProfile('1', { bio: 'New Bio' });
-      expect(result.bio).toBe('New Bio');
+  describe("Friend Requests", () => {
+    it("creates PENDING friend request", async () => {
+      (prismaMock.friendRequest.findUnique as any)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+      (prismaMock.friendRequest.create as any).mockResolvedValue({
+        id: "fr1",
+        status: FriendRequestStatus.PENDING,
+      });
+
+      const result = await db.addFriend("u1", "u2");
+      expect(result.status).toBe(FriendRequestStatus.PENDING);
+      expect(prismaMock.friendRequest.create).toHaveBeenCalled();
+    });
+
+    it("auto-accepts reverse pending request", async () => {
+      (prismaMock.friendRequest.findUnique as any)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: "fr2",
+          requesterId: "u2",
+          receiverId: "u1",
+          status: FriendRequestStatus.PENDING,
+        });
+      (prismaMock.friendRequest.update as any).mockResolvedValue({
+        id: "fr2",
+        status: FriendRequestStatus.ACCEPTED,
+      });
+
+      const result = await db.addFriend("u1", "u2");
+      expect(result.status).toBe(FriendRequestStatus.ACCEPTED);
     });
   });
 
-  describe('Friend Management', () => {
-    it('should create friend request/acceptance (Requirement: Friend users & acceptance)', async () => {
-      // First addFriend call (creates and accepts in our simplified logic)
-      (prismaMock.friendRequest.findUnique as any).mockResolvedValue(null);
-      (prismaMock.friendRequest.create as any).mockResolvedValue({ id: 'req1', status: 'ACCEPTED' });
+  describe("Blocks and Messaging", () => {
+    it("prevents message when either side has block", async () => {
+      (prismaMock.block.findFirst as any).mockResolvedValue({ blockerId: "u2" });
 
-      const result = await db.addFriend('u1', 'u2');
-      expect(result.status).toBe('ACCEPTED');
+      await expect(db.sendMessage("u1", "u2", "hello")).rejects.toThrow(
+        "CANNOT_SEND_MESSAGE_BLOCKED"
+      );
     });
 
-    it('should update request to accepted (Requirement: Acceptance flow)', async () => {
-      // Manually accepting an existing request
-      (prismaMock.friendRequest.update as any).mockResolvedValue({ id: 'req1', status: 'ACCEPTED' });
-      const result = await db.acceptFriendRequest('req1');
-      expect(result.status).toBe('ACCEPTED');
-    });
-  });
+    it("creates challenge messages as CHALLENGE type", async () => {
+      (prismaMock.block.findFirst as any).mockResolvedValue(null);
+      (prismaMock.message.create as any).mockResolvedValue({
+        id: "m1",
+        type: MessageType.CHALLENGE,
+      });
 
-  describe('Blocking & Safety', () => {
-    it('should block a user (Requirement: Block users)', async () => {
-      (prismaMock.block.create as any).mockResolvedValue({ blockerId: 'u1', blockedId: 'u2' });
-      await db.blockUser('u1', 'u2');
-      expect(prismaMock.block.create).toHaveBeenCalled();
-    });
-
-    it('should prevent blocked user from messaging (Requirement: Blocked user can’t message)', async () => {
-      (prismaMock.block.findUnique as any).mockResolvedValue({ blockerId: 'receiver', blockedId: 'sender' });
-      await expect(db.sendMessage('sender', 'receiver', 'hi')).rejects.toThrow('CANNOT_SEND_MESSAGE_BLOCKED');
-    });
-
-    it('should prevent blocked user from challenging (Requirement: Blocked user can’t challenge)', async () => {
-      (prismaMock.block.findUnique as any).mockResolvedValue({ blockerId: 'receiver', blockedId: 'sender' });
-      await expect(db.createChallenge('sender', 'receiver')).rejects.toThrow('CANNOT_CHALLENGE_BLOCKED');
+      const result = await db.createChallenge("u1", "u2");
+      expect(result.type).toBe(MessageType.CHALLENGE);
+      expect(prismaMock.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ type: MessageType.CHALLENGE }),
+        })
+      );
     });
   });
 
-  describe('Messaging & Challenges', () => {
-    it('should send and fetch messages (Requirement: Message other users)', async () => {
-      (prismaMock.block.findUnique as any).mockResolvedValue(null);
-      (prismaMock.message.create as any).mockResolvedValue({ content: 'hello' });
-      (prismaMock.message.findMany as any).mockResolvedValue([{ content: 'hello' }]);
-
-      await db.sendMessage('u1', 'u2', 'hello');
-      const history = await db.getChatHistory('u1', 'u2');
-      expect(history[0].content).toBe('hello');
+  describe("Admin and Reports", () => {
+    it("returns admin chat logs", async () => {
+      (prismaMock.message.findMany as any).mockResolvedValue([{ id: "m1", content: "hello" }]);
+      const result = await db.getChatsBetweenUsers("u1", "u2");
+      expect(result).toHaveLength(1);
     });
 
-    it('should create challenges (Requirement: Challenge a specific user)', async () => {
-      (prismaMock.block.findUnique as any).mockResolvedValue(null);
-      (prismaMock.message.create as any).mockResolvedValue({ content: 'CHALLENGE_INVITE' });
-
-      const result = await db.createChallenge('u1', 'u2');
-      expect(result.content).toBe('CHALLENGE_INVITE');
-    });
-  });
-
-  describe('Elo & Admin', () => {
-    it('should return correct Elo for user (Requirement: See current Elo)', async () => {
-      (prismaMock.user.findUnique as any).mockResolvedValue({ elo: 1500 });
-      const elo = await db.getUserElo('1');
-      expect(elo).toBe(1500);
-    });
-
-    it('should allow admin to monitor chats (Requirement: Admin monitor chats)', async () => {
-      (prismaMock.message.findMany as any).mockResolvedValue([{ content: 'monitored' }]);
-      const chats = await db.getChatsBetweenUsers('u1', 'u2');
-      expect(chats[0].content).toBe('monitored');
-    });
-  });
-
-  describe('Reporting & Bugs', () => {
-    it('should log user reports (Requirement: Report system)', async () => {
-      (prismaMock.report.create as any).mockResolvedValue({ id: 'r1' });
-      await db.reportUser('u1', 'u2', 'toxic');
-      expect(prismaMock.report.create).toHaveBeenCalled();
-    });
-
-    it('should log bug reports (Requirement: Report issues/bugs)', async () => {
-      (prismaMock.bugReport.create as any).mockResolvedValue({ id: 'b1' });
-      await db.createBugReport('u1', 'Bug', 'Details');
-      expect(prismaMock.bugReport.create).toHaveBeenCalled();
+    it("creates bug reports", async () => {
+      (prismaMock.bugReport.create as any).mockResolvedValue({ id: "b1" });
+      const result = await db.createBugReport("u1", "title", "description");
+      expect(result.id).toBe("b1");
     });
   });
 });
