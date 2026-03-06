@@ -8,8 +8,15 @@ qt_standard_project_setup()
 qt_add_executable(DSA_VS
     WIN32 MACOSX_BUNDLE
     main.cpp
-    Window.cpp
-    Window.hh
+    ProblemPage.cpp
+    ProblemPage.hh
+    LoginPage.hh LoginPage.cpp
+    SignupPage.hh SignupPage.cpp
+    AccountPage.hh AccountPage.cpp
+    HomePage.hh HomePage.cpp
+    PageStack.hh PageStack.cpp
+    Account.hh Account.cpp
+    MainWindow.hh MainWindow.cpp
 )
 
 target_link_libraries(DSA_VS

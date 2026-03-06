@@ -1,7 +1,7 @@
-#ifndef WINDOW_HH
-#define WINDOW_HH
+#ifndef PROBLEMPAGE_H
+#define PROBLEMPAGE_H
 
-#include <QMainWindow>
+#include <QToolBar>
 #include <QVBoxLayout>
 #include <QSplitter>
 #include <QTextEdit>
@@ -23,11 +23,10 @@ enum UI_STATUS {
 //      create new class for Problem pane
 //      move old code into those classes
 //      create references to them from inside Window
-class Window : public QMainWindow
+class ProblemPage : public QWidget
 {
     Q_OBJECT
 private:
-    QWidget *CW;
     QVBoxLayout *lytMain;
 
     QWidget *tbMainTools;
@@ -58,8 +57,8 @@ private:
 public:
     UI_STATUS status;
 
-    Window(QWidget *parent = nullptr);
-    ~Window();
+    ProblemPage(QWidget *parent = nullptr);
+    ~ProblemPage();
 
     // Allocate memory for the GUI elements
     void allocContents();
@@ -74,4 +73,4 @@ public:
     void setEditorToolbar();
 
 };
-#endif // WINDOW_HH
+#endif // PROBLEMPAGE_H

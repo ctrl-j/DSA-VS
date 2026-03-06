@@ -1,4 +1,4 @@
-#include "Window.hh"
+#include "ProblemPage.hh"
 
 #include <QComboBox>
 #include <QTextDocument>
@@ -7,13 +7,12 @@
 
 #include <iostream>
 
-
-Window::~Window() {
+ProblemPage::~ProblemPage() {
 
 }
 
-Window::Window(QWidget *parent)
-    : QMainWindow(parent)
+ProblemPage::ProblemPage(QWidget *parent)
+    : QWidget(parent)
 {
     // Starting state is "OK"
     status = OK;
@@ -21,14 +20,9 @@ Window::Window(QWidget *parent)
     // Create + set the contents of the window
     allocContents();
     setContents();
-
-    // Window configuration
-    resize(QSize(800, 600));
-    show();
 }
 
-void Window::allocContents() {
-    CW = new QWidget();
+void ProblemPage::allocContents() {
     lytMain = new QVBoxLayout();
 
     splitter = new QSplitter();
@@ -49,7 +43,7 @@ void Window::allocContents() {
     scrollerProblem = new QScrollArea();
 }
 
-void Window::setContents() {
+void ProblemPage::setContents() {
     // Setup toolbar widgets
     setMainToolbar();
     setProblemToolbar();
@@ -89,12 +83,11 @@ void Window::setContents() {
     QSize splitterSize = splitter->size();
     splitter->setSizes({splitterSize.width() / 2, splitterSize.width() / 2 });
 
-    // Setup the central widget
-    CW->setLayout(lytMain);
-    setCentralWidget(CW);
+    // Set the layout
+    setLayout(lytMain);
 }
 
-UI_STATUS Window::setProblemPane() {
+UI_STATUS ProblemPage::setProblemPane() {
     QString problemText =
         "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.\n\
         Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.\n\
@@ -123,7 +116,7 @@ UI_STATUS Window::setProblemPane() {
     return OK;
 }
 
-UI_STATUS Window::setEditorPane() {
+UI_STATUS ProblemPage::setEditorPane() {
     lytEditor->addWidget(tbEditorTools);
     lytEditor->addWidget(tedEditor);
     lytEditorInfo->addWidget(lblEditorInfo1, Qt::AlignLeft);
@@ -139,7 +132,7 @@ UI_STATUS Window::setEditorPane() {
     return OK;
 }
 
-void Window::setMainToolbar() {
+void ProblemPage::setMainToolbar() {
     tbMainTools = new QWidget();
     tbMainLayout = new QHBoxLayout(tbMainTools);
 
@@ -180,7 +173,7 @@ void Window::setMainToolbar() {
     btnAccount->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
 
-void Window::setProblemToolbar() {
+void ProblemPage::setProblemToolbar() {
     // "Zoom Out" button on the problem toolbar
     QAction *actZoomOut = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::ZoomOut), "");
     // "Zoom In" button on the problem toolbar
@@ -202,7 +195,7 @@ void Window::setProblemToolbar() {
     tbProblemTools->addAction(actFindText);
 }
 
-void Window::setEditorToolbar() {
+void ProblemPage::setEditorToolbar() {
     // "Font selection" combo box
     QComboBox *cmbFontSelect = new QComboBox();
     cmbFontSelect->addItem("Courier New");
