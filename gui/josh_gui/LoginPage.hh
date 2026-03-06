@@ -9,10 +9,14 @@ class QLabel;
 class QTextEdit;
 class QPushButton;
 
+class PageStack;
+
 class LoginPage : public QWidget
 {
     Q_OBJECT
 private:
+    PageStack *pageStack;
+
     QVBoxLayout *lytMain;
     QLabel *lblLogin;
 
@@ -31,7 +35,7 @@ private:
     QPushButton *btnSignup;
 
 public:
-    LoginPage(QWidget *parent = nullptr);
+    LoginPage(PageStack *_pageStack, QWidget *parent = nullptr);
 
     void allocContents();
     void setSizePolicies();
@@ -42,6 +46,9 @@ public:
 
     QString getUsernameText();
     QString getPasswordText();
+public slots:
+    void btnLoginPressed();
+    void btnSignupPressed();
 };
 
 #endif // LOGINPAGE_HH
