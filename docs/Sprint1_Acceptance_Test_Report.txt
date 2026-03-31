@@ -1,0 +1,263 @@
+Sprint 1 Acceptance Criteria Test Report
+Project: DSA VS
+Date: March 6, 2026
+
+Execution Summary
+- Frontend automated tests (Vitest): 36 passed, 0 failed.
+- Backend automated tests (Jest): 13 passed, 0 failed.
+- Additional manual smoke checks were run for challenge-block and admin-ban behavior.
+
+User Story #1 - Register
+Test Case: US1-TC1
+Short Description: Create account with valid username and password.
+Input: Logged-out user opens /register, enters username newuser and password Password123, then clicks Create account.
+Observed Output: The page shows "Account created." and the register API returns success.
+Acceptable Output: Yes
+
+Test Case: US1-TC2
+Short Description: Prevent duplicate username registration.
+Input: Logged-out user tries to register username alice, which already exists.
+Observed Output: The page shows an error that the username is already taken. No new account is created.
+Acceptable Output: Yes
+
+Test Case: US1-TC3
+Short Description: Reject invalid registration input.
+Input: Logged-out user submits register form with missing required fields.
+Observed Output: The page shows a validation error (for example, "username required"). Request is rejected.
+Acceptable Output: Yes
+
+User Story #2 - Login
+Test Case: US2-TC1
+Short Description: Login with correct credentials.
+Input: User enters username alice and password Password123, then clicks Login.
+Observed Output: Login succeeds and the user is taken to authenticated content (Profile page).
+Acceptable Output: Yes
+
+Test Case: US2-TC2
+Short Description: Keep user logged out on wrong password.
+Input: User enters username alice and an incorrect password.
+Observed Output: The page shows "Invalid username or password" and user remains on Login.
+Acceptable Output: Yes
+
+Test Case: US2-TC3
+Short Description: Block private route access when not logged in.
+Input: Unauthenticated user opens /profile directly.
+Observed Output: User is redirected to Login.
+Acceptable Output: Yes
+
+User Story #3 - Change Password
+Test Case: US3-TC1
+Short Description: Change password with correct current password.
+Input: Logged-in user enters current password Password123 and new password NewPassword123, then submits.
+Observed Output: The page shows "Password changed." and password update succeeds.
+Acceptable Output: Yes
+
+Test Case: US3-TC2
+Short Description: Reject change when current password is wrong.
+Input: Logged-in user enters wrong current password and valid new password.
+Observed Output: The page shows "current password is incorrect" and password is not changed.
+Acceptable Output: Yes
+
+Test Case: US3-TC3
+Short Description: Old password no longer works after change.
+Input: User changes password, then tries to log in using old password Password123.
+Observed Output: Login fails with "Invalid username or password."
+Acceptable Output: Yes
+
+Test Case: US3-TC4
+Short Description: New password works after change.
+Input: User changes password, then logs in using the new password.
+Observed Output: Login succeeds and authenticated page is shown.
+Acceptable Output: Yes
+
+User Story #4 - Profile Customization
+Test Case: US4-TC1
+Short Description: View existing profile data.
+Input: Logged-in user opens /profile.
+Observed Output: Current profile info (username, elo, bio/avatar if present) is displayed.
+Acceptable Output: Yes
+
+Test Case: US4-TC2
+Short Description: Save valid profile edits.
+Input: Logged-in user edits bio and avatar URL on /profile/edit, then clicks Save.
+Observed Output: Save succeeds and refreshed profile shows updated data.
+Acceptable Output: Yes
+
+Test Case: US4-TC3
+Short Description: Reject invalid profile edit.
+Input: Logged-in user enters invalid avatar URL format and clicks Save.
+Observed Output: Validation error is shown and profile data is not updated.
+Acceptable Output: Yes
+
+User Story #5 - Friends
+Test Case: US5-TC1
+Short Description: Send friend request.
+Input: Logged-in user Alice sends friend request to Bob.
+Observed Output: Request is saved with pending status and UI shows pending confirmation.
+Acceptable Output: Yes
+
+Test Case: US5-TC2
+Short Description: Accept pending friend request.
+Input: Bob opens pending requests and clicks Accept on Alice's request.
+Observed Output: Both users appear in each other's friends list.
+Acceptable Output: Yes
+
+Test Case: US5-TC3
+Short Description: Prevent duplicate friend request.
+Input: Alice sends another request to Bob while one is already pending.
+Observed Output: System blocks the duplicate request and shows an already-pending message.
+Acceptable Output: Yes
+
+User Story #6 - Block Users
+Test Case: US6-TC1
+Short Description: Blocked user cannot send message.
+Input: Alice blocks Bob, then Bob (or Alice in blocked pair flow) attempts to send a message.
+Observed Output: Message send is denied with blocked error.
+Acceptable Output: Yes
+
+Test Case: US6-TC2
+Short Description: Blocked user cannot create challenge.
+Input: Alice blocks Bob, then a challenge request is attempted between them.
+Observed Output: Challenge request is rejected and challenge is not created.
+Acceptable Output: Yes
+
+Test Case: US6-TC3
+Short Description: Unblock restores normal communication.
+Input: Alice blocks Bob, then unblocks Bob, then sends message/challenge again.
+Observed Output: Action succeeds after unblock (message sends and challenge creation is allowed).
+Acceptable Output: Yes
+
+User Story #7 - Messaging
+Test Case: US7-TC1
+Short Description: Send message and store it.
+Input: Logged-in user sends "new message" to another user.
+Observed Output: UI shows "Message sent." and message appears in conversation.
+Acceptable Output: Yes
+
+Test Case: US7-TC2
+Short Description: Load existing conversation history.
+Input: Logged-in user loads chat history with another user.
+Observed Output: Existing messages are displayed.
+Acceptable Output: Yes
+
+Test Case: US7-TC3
+Short Description: Prevent message if either side is blocked.
+Input: One side blocks the other, then a message send is attempted.
+Observed Output: Message is rejected with blocked/forbidden error.
+Acceptable Output: Yes
+
+User Story #8 - Elo
+Test Case: US8-TC1
+Short Description: Show elo for logged-in user.
+Input: Logged-in user opens /elo.
+Observed Output: Current Elo value is displayed.
+Acceptable Output: Yes
+
+Test Case: US8-TC2
+Short Description: Show updated elo after change.
+Input: User's Elo value changes in data, then user refreshes profile/elo view.
+Observed Output: Displayed Elo reflects latest saved value.
+Acceptable Output: Yes
+
+Test Case: US8-TC3
+Short Description: Deny elo page for logged-out user.
+Input: Unauthenticated user opens /elo.
+Observed Output: User is redirected/blocked and shown Login.
+Acceptable Output: Yes
+
+User Story #9 - Admin Chat Monitoring
+Test Case: US9-TC1
+Short Description: Admin can view chat logs.
+Input: Admin opens /admin/chats and loads chat between alice and bob.
+Observed Output: Chat messages are shown.
+Acceptable Output: Yes
+
+Test Case: US9-TC2
+Short Description: Non-admin cannot access admin chat page.
+Input: Non-admin user opens /admin/chats.
+Observed Output: Authorization error is shown (admin only).
+Acceptable Output: Yes
+
+Test Case: US9-TC3
+Short Description: Admin can filter/search chats.
+Input: Admin loads chats, then types a search term.
+Observed Output: Matching messages are filtered; non-matches show no results.
+Acceptable Output: Yes
+
+User Story #10 - Ranked Queue
+Test Case: US10-TC1
+Short Description: Join ranked queue.
+Input: Logged-in user clicks Join ranked.
+Observed Output: Queue state shows queued with mode ranked.
+Acceptable Output: Yes
+
+Test Case: US10-TC2
+Short Description: Leave ranked queue.
+Input: Queued user clicks Leave queue.
+Observed Output: Queue state updates to not queued.
+Acceptable Output: Yes
+
+Test Case: US10-TC3
+Short Description: Prevent duplicate ranked queue entries.
+Input: User clicks Join ranked multiple times.
+Observed Output: User remains a single queued entry; state is stable and not duplicated.
+Acceptable Output: Yes
+
+User Story #11 - AI FFA Queue
+Test Case: US11-TC1
+Short Description: Join FFA queue.
+Input: Logged-in user clicks Join FFA.
+Observed Output: Queue state shows mode ffa and queued true.
+Acceptable Output: Yes
+
+Test Case: US11-TC2
+Short Description: Leave FFA queue.
+Input: FFA-queued user clicks Leave queue.
+Observed Output: Queue state updates to not queued.
+Acceptable Output: Yes
+
+Test Case: US11-TC3
+Short Description: Block FFA join when already in ranked.
+Input: User joins ranked, then clicks Join FFA.
+Observed Output: Error is shown and user stays in ranked queue.
+Acceptable Output: Yes
+
+User Story #12 - Report and Ban Flow
+Test Case: US12-TC1
+Short Description: Submit user report.
+Input: Logged-in user submits report against another user with a reason.
+Observed Output: Report is saved and confirmation message appears.
+Acceptable Output: Yes
+
+Test Case: US12-TC2
+Short Description: Admin bans user from report review.
+Input: Admin opens user reports and triggers ban action.
+Observed Output: Report action marks user as banned.
+Acceptable Output: Yes
+
+Test Case: US12-TC3
+Short Description: Banned user access is denied.
+Input: Banned user attempts login and protected actions.
+Observed Output: System denies access and shows ban-related error message.
+Acceptable Output: Yes
+
+User Story #13 - Bug Reports
+Test Case: US13-TC1
+Short Description: Submit valid bug report.
+Input: User enters bug title and description, then submits.
+Observed Output: Bug report is saved and success confirmation appears.
+Acceptable Output: Yes
+
+Test Case: US13-TC2
+Short Description: Validate required bug report fields.
+Input: User submits bug report form with missing required fields.
+Observed Output: Validation error is shown and report is not saved.
+Acceptable Output: Yes
+
+Test Case: US13-TC3
+Short Description: Admin can open bug report list.
+Input: Admin opens /admin/bug-reports.
+Observed Output: Submitted bug reports are visible to admin.
+Acceptable Output: Yes
+
+End of report.
