@@ -1,7 +1,7 @@
 import type { IncomingMessage } from "node:http";
 import type { Socket } from "node:net";
 import { URL } from "node:url";
-import { MatchMode, SubmissionStatus } from "@prisma/client";
+import { MatchMode } from "@prisma/client";
 import { WebSocket, WebSocketServer } from "ws";
 import {
   completeMatch,
@@ -13,13 +13,12 @@ import {
   getUserById,
   getUserByUsername,
   sendMessage,
-  updateMatchParticipantProgress,
-  updateSubmission,
 } from "../database";
 import type { GlobalMatchQueue } from "../global-match-queue";
 import { User } from "../user";
 import { getTrimmedString, isObject, mapKnownError, modeToEnum } from "./http-utils";
 import { ActiveMatchTimer, LiveWebSocket, WsAuthContext, WsEvent } from "./types";
+import { enqueueSubmission } from "../judge/execution-queue";
 
 export interface WsRuntime {
   wsServer: WebSocketServer;
@@ -406,6 +405,16 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
         return;
       }
 
+      // Look up the match to get the problemId
+      const match = await getMatchById(matchId);
+      if (!match || !match.problemId) {
+        sendWsEvent(socket, "error", {
+          code: "NOT_FOUND",
+          message: "Match or problem not found.",
+        });
+        return;
+      }
+
       const submission = await createSubmission(matchId, context.userId, language, code);
 
       sendWsEvent(socket, "submission.accepted", {
@@ -414,41 +423,15 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
         status: submission.status,
       });
 
-      const simulatedDuration = 1000 + Math.floor(Math.random() * 1500);
-      setTimeout(async () => {
-        try {
-          const passedCount = Math.floor(Math.random() * 11);
-          await updateSubmission(submission.id, {
-            status: SubmissionStatus.COMPLETED,
-            passedCount,
-          });
-          await updateMatchParticipantProgress(matchId, context.userId, passedCount);
-
-          const match = await getMatchById(matchId);
-          if (!match) {
-            return;
-          }
-
-          const me = match.participants.find((participant) => participant.userId === context.userId);
-          const opponent = match.participants.find((participant) => participant.userId !== context.userId);
-          if (!me || !opponent) {
-            return;
-          }
-
-          sendToUser(context.userId, "match.progress", {
-            matchId,
-            mePassed: me.passedCount,
-            opponentPassed: opponent.passedCount,
-          });
-          sendToUser(opponent.userId, "match.progress", {
-            matchId,
-            mePassed: opponent.passedCount,
-            opponentPassed: me.passedCount,
-          });
-        } catch (error) {
-          console.error("Failed to complete simulated submission", error);
-        }
-      }, simulatedDuration);
+      // Enqueue for real execution instead of simulating
+      await enqueueSubmission({
+        submissionId: submission.id,
+        matchId,
+        userId: context.userId,
+        problemId: match.problemId,
+        language,
+        code,
+      });
 
       return;
     }

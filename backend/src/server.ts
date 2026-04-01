@@ -16,6 +16,7 @@ import { handleTestClientRoute } from "./server/routes/test-client-route";
 import { ApiException } from "./server/types";
 import { createWsRuntime } from "./server/ws-runtime";
 import { GlobalMatchQueue } from "./global-match-queue";
+import { startExecutionWorker } from "./judge/execution-queue";
 
 let portValue = Number(process.env.PORT);
 if (!Number.isFinite(portValue) || portValue <= 0) {
@@ -32,6 +33,7 @@ const TASK_CONCURRENCY = Math.floor(taskConcurrencyValue);
 const concurrentClientHandler = new ConcurrentClientHandler(TASK_CONCURRENCY);
 const globalMatchQueue = new GlobalMatchQueue();
 const wsRuntime = createWsRuntime(globalMatchQueue);
+startExecutionWorker(wsRuntime.sendToUser);
 
 async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? "/", "http://localhost");

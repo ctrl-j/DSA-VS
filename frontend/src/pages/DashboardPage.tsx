@@ -9,7 +9,7 @@ export function DashboardPage() {
 
   return (
     <section>
-      <h1>DSA.VS Sprint 1 Frontend</h1>
+      <h1>DSA.VS</h1>
       {user ? <p>Logged in as {user.username}</p> : <p>Please login or register.</p>}
     </section>
   );
