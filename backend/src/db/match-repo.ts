@@ -8,18 +8,22 @@ import { prisma } from "./client";
 import { now } from "./common";
 
 export async function findProblemForMatch(
-  preferredDifficulty?: Difficulty
-): Promise<{ id: string; title: string; statement: string } | null> {
+  preferredDifficulty?: Difficulty,
+  preferredCategory?: string
+): Promise<{ id: string; title: string; statement: string; difficulty: Difficulty; category: string } | null> {
   const problem = await prisma.problem.findFirst({
     where: {
       isActive: true,
       ...(preferredDifficulty ? { difficulty: preferredDifficulty } : {}),
+      ...(preferredCategory ? { category: preferredCategory } : {}),
     },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
       title: true,
       statement: true,
+      difficulty: true,
+      category: true,
     },
   });
 
@@ -29,9 +33,11 @@ export async function findProblemForMatch(
 export async function createMatchForUsers(
   userOne: { id: string; elo: number },
   userTwo: { id: string; elo: number },
-  mode: MatchMode
+  mode: MatchMode,
+  preferredDifficulty?: Difficulty,
+  preferredCategory?: string
 ) {
-  const problem = await findProblemForMatch();
+  const problem = await findProblemForMatch(preferredDifficulty, preferredCategory);
 
   return prisma.match.create({
     data: {
@@ -253,13 +259,73 @@ export async function getMatchHistory(
   });
 }
 
-export async function getLeaderboard(limit = 100) {
+export async function setMatchParticipantLanguage(
+  matchId: string,
+  userId: string,
+  language: string
+) {
+  return prisma.matchParticipant.update({
+    where: {
+      matchId_userId: {
+        matchId,
+        userId,
+      },
+    },
+    data: {
+      language,
+    },
+  });
+}
+
+export async function createProblem(data: {
+  title: string;
+  statement: string;
+  difficulty: Difficulty;
+  category: string;
+  timeLimitMs?: number;
+  memoryLimitMb?: number;
+}) {
+  return prisma.problem.create({
+    data: {
+      ...data,
+      isActive: true,
+    },
+  });
+}
+
+export async function addTestCase(
+  problemId: string,
+  input: string,
+  expectedOutput: string,
+  isHidden = true
+) {
+  return prisma.testCase.create({
+    data: {
+      problemId,
+      input,
+      expectedOutput,
+      isHidden,
+    },
+  });
+}
+
+export async function getTestCases(problemId: string, includeHidden = false) {
+  return prisma.testCase.findMany({
+    where: {
+      problemId,
+      ...(includeHidden ? {} : { isHidden: false }),
+    },
+  });
+}
+
+export async function getLeaderboard(limit = 100, sortBy: "elo" | "createdAt" = "elo") {
   return prisma.user.findMany({
-    orderBy: [{ elo: "desc" }, { createdAt: "asc" }],
+    orderBy: sortBy === "elo" ? [{ elo: "desc" }, { createdAt: "asc" }] : [{ createdAt: "desc" }],
     select: {
       id: true,
       username: true,
       elo: true,
+      createdAt: true,
     },
     take: limit,
   });

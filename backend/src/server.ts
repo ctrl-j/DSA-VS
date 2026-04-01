@@ -9,6 +9,7 @@ import { handleChatChallengeRoutes } from "./server/routes/chat-challenge-routes
 import { handleFriendsBlocksRoutes } from "./server/routes/friends-blocks-routes";
 import { handleMatchesRoutes } from "./server/routes/matches-routes";
 import { handleMeRoutes } from "./server/routes/me-routes";
+import { handleProblemRoutes } from "./server/routes/problem-routes";
 import { handleQueueTaskRoutes } from "./server/routes/queue-task-routes";
 import { handleReportsAdminRoutes } from "./server/routes/reports-admin-routes";
 import { handleTestClientRoute } from "./server/routes/test-client-route";
@@ -86,6 +87,10 @@ async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Pro
   }
 
   if (await handleReportsAdminRoutes(req.method, url, res, currentUser, req)) {
+    return;
+  }
+
+  if (await handleProblemRoutes(req.method, url, res, currentUser, req)) {
     return;
   }
 

@@ -3,6 +3,10 @@ import { User } from "./user";
 interface QueueEntry {
   user: User;
   joinedAtMs: number;
+  preferences?: {
+    difficulty?: string;
+    category?: string;
+  };
 }
 
 interface QueueState {
@@ -20,6 +24,10 @@ interface RankedPair {
   mode: "ranked";
   users: [User, User];
   matchedAtMs: number;
+  preferences?: {
+    difficulty?: string;
+    category?: string;
+  };
 }
 
 interface JoinResult {
@@ -53,7 +61,11 @@ export class GlobalMatchQueue {
     this.memberships = new Map();
   }
 
-  join(user: User, mode: "ranked" | "ffa"): JoinResult {
+  join(
+    user: User,
+    mode: "ranked" | "ffa",
+    preferences?: { difficulty?: string; category?: string }
+  ): JoinResult {
     this.assertValidMode(mode);
     const existingMode = this.memberships.get(user.userId);
 
@@ -75,6 +87,7 @@ export class GlobalMatchQueue {
     queue.push({
       user,
       joinedAtMs: Date.now(),
+      preferences,
     });
     this.memberships.set(user.userId, mode);
 
@@ -172,6 +185,7 @@ export class GlobalMatchQueue {
       mode: "ranked",
       users: [first.user, second.user],
       matchedAtMs: now,
+      preferences: first.preferences,
     };
   }
 

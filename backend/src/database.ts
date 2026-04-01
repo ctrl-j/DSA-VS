@@ -59,15 +59,19 @@ export {
 } from "./db/report-repo";
 
 export {
+  addTestCase,
   completeMatch,
   createMatchForUsers,
+  createProblem,
   createSubmission,
   findProblemForMatch,
   getDraft,
   getLeaderboard,
   getMatchById,
   getMatchHistory,
+  getTestCases,
   saveDraft,
+  setMatchParticipantLanguage,
   updateMatchParticipantProgress,
   updateSubmission,
 } from "./db/match-repo";
