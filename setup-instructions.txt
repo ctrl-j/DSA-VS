@@ -13,7 +13,21 @@ cp .env.example .env
 npx prisma migrate dev
 
 
-line 1 sets up postgres/redis and does versioning and ports
-line 2/3 install prisma and dependencies
-line 4 sets up .env
-line 5 creates tables using prisma and postgres, and syncs schema and client
+
+running website:
+
+run backend first:
+cd backend
+npm install
+cp .env.example .env (if you haven't already)
+npx prisma migrate dev
+npm run dev
+
+
+run frontend:
+cd frontend
+npm install
+npm run dev
+
+if you want to view the database:
+npx prisma studio
