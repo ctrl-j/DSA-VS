@@ -1,95 +1,163 @@
-import { useEffect, useRef, useState } from "react";
+import "./QueuePage.css";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { joinQueue, leaveQueue, queueState } from "../features/queue/queue-service";
-import { QueueState } from "../types/models";
+import { useWs } from "../providers/WebSocketProvider";
+import type { WsMatchFound } from "../types";
 
-const emptyState: QueueState = { mode: null, queued: false };
+type QueuePhase = "idle" | "searching" | "found";
 
 export function QueuePage() {
   const { user } = useAuth();
-  const [state, setState] = useState<QueueState>(emptyState);
+  const { send, subscribe } = useWs();
+  const navigate = useNavigate();
+
+  const [phase, setPhase] = useState<QueuePhase>("idle");
+  const [elapsed, setElapsed] = useState(0);
+  const [matchData, setMatchData] = useState<WsMatchFound | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [matchPopup, setMatchPopup] = useState<string | null>(null);
-  const manualLeaveRef = useRef(false);
-  const prevQueuedRef = useRef(false);
+  const [preferredLang, setPreferredLang] = useState(
+    () => localStorage.getItem("dsavs-preferred-lang") || "python"
+  );
 
-  const load = async (silent = false) => {
-    if (!user) return;
-    try {
-      const next = await queueState(user.username);
-      if (prevQueuedRef.current && !next.queued && !manualLeaveRef.current) {
-        setMatchPopup("Matched! You have been paired.");
-      }
-      manualLeaveRef.current = false;
-      prevQueuedRef.current = next.queued;
-      setState(next);
-    } catch {
-      if (!silent) setState(emptyState);
-    }
+  const handleLangChange = (lang: string) => {
+    setPreferredLang(lang);
+    localStorage.setItem("dsavs-preferred-lang", lang);
   };
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const startTimeRef = useRef<number>(0);
 
+  // Subscribe to match.found
   useEffect(() => {
-    void load();
-    const timer = setInterval(() => void load(true), 1000);
-    return () => clearInterval(timer);
-  }, [user?.username]);
+    const unsub = subscribe("match.found", (payload: WsMatchFound) => {
+      setPhase("found");
+      setMatchData(payload);
+      if (timerRef.current) clearInterval(timerRef.current);
 
-  const join = async (mode: "ranked" | "ffa") => {
-    if (!user) return;
-    setError(null);
-    try {
-      const result = await joinQueue(user.username, mode);
-      if (result.pair) {
-        const opponent = result.pair.users.find((candidate) => candidate.userId !== user.id);
-        setMatchPopup(
-          opponent ? `Matched! You are paired with ${opponent.username}.` : "Matched! You have been paired."
-        );
-        setState(emptyState);
-        prevQueuedRef.current = false;
-        return;
+      // Navigate after 2 seconds
+      setTimeout(() => {
+        navigate(`/match/${payload.matchId}`);
+      }, 2000);
+    });
+    return unsub;
+  }, [subscribe, navigate]);
+
+  // Elapsed timer
+  useEffect(() => {
+    if (phase === "searching") {
+      startTimeRef.current = Date.now();
+      setElapsed(0);
+      timerRef.current = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }, 1000);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [phase]);
+
+  const joinQueue = useCallback(
+    (mode: "ranked" | "ffa") => {
+      setError(null);
+      try {
+        send("queue.join", { mode });
+        setPhase("searching");
+      } catch {
+        setError("Failed to join queue.");
       }
+    },
+    [send],
+  );
 
-      const nextState: QueueState = {
-        queued: true,
-        mode,
-        position: result.position ?? 1,
-      };
-      setState(nextState);
-      prevQueuedRef.current = true;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Queue join failed.");
-    }
-  };
+  const cancelQueue = useCallback(() => {
+    send("queue.leave", {});
+    setPhase("idle");
+    setElapsed(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+  }, [send]);
 
-  const leave = async () => {
-    if (!user) return;
-    setError(null);
-    try {
-      manualLeaveRef.current = true;
-      await leaveQueue(user.username);
-      setState(emptyState);
-      prevQueuedRef.current = false;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Queue leave failed.");
-    }
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   return (
-    <section>
-      <h1>Queue</h1>
-      <p>
-        Queued: {state.queued ? "Yes" : "No"} | Mode: {state.mode ?? "none"}
-      </p>
-      <button type="button" onClick={() => void join("ranked")}>Join ranked</button>
-      <button type="button" onClick={() => void join("ffa")}>Join FFA</button>
-      <button type="button" onClick={() => void leave()}>Leave queue</button>
-      {error && <p role="alert">{error}</p>}
-      {matchPopup && (
-        <div role="alert">
-          <p>{matchPopup}</p>
-          <button type="button" onClick={() => setMatchPopup(null)}>Close</button>
+    <div className="queue-page">
+      <h1 className="queue-page__title">Queue</h1>
+      <div className="queue-page__elo">
+        ELO <span className="queue-page__elo-value">{user?.elo ?? "---"}</span>
+      </div>
+
+      {phase === "idle" && (
+        <>
+        <div className="queue-lang-select">
+          <label className="queue-lang-label">Preferred Language</label>
+          <select
+            className="queue-lang-dropdown"
+            value={preferredLang}
+            onChange={(e) => handleLangChange(e.target.value)}
+          >
+            <option value="python">Python</option>
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+          </select>
+        </div>
+        <div className="queue-modes">
+          <button
+            type="button"
+            className="queue-mode-card queue-mode-card--ranked"
+            onClick={() => joinQueue("ranked")}
+          >
+            <span className="queue-mode-card__label">Ranked</span>
+            <span className="queue-mode-card__sub">Competitive ELO match</span>
+            <span className="queue-mode-card__elo-badge">
+              {user?.elo ?? "---"} SR
+            </span>
+          </button>
+          <button
+            type="button"
+            className="queue-mode-card queue-mode-card--ffa"
+            onClick={() => joinQueue("ffa")}
+          >
+            <span className="queue-mode-card__label">Free For All</span>
+            <span className="queue-mode-card__sub">Casual match</span>
+          </button>
+        </div>
+        </>
+      )}
+
+      {phase === "searching" && (
+        <div className="queue-searching">
+          <span className="queue-searching__text">Searching...</span>
+          <div className="queue-searching__line" />
+          <span className="queue-searching__timer">{formatTime(elapsed)}</span>
+          <button
+            type="button"
+            className="queue-searching__cancel"
+            onClick={cancelQueue}
+          >
+            Cancel
+          </button>
         </div>
       )}
-    </section>
+
+      {phase === "found" && matchData && (
+        <div className="queue-match-found">
+          <span className="queue-match-found__title">Match Found</span>
+          <div className="queue-match-found__opponent">
+            vs{" "}
+            <span className="queue-match-found__opponent-name">
+              {matchData.opponent.username}
+            </span>
+            <span className="queue-match-found__opponent-elo">
+              {matchData.opponent.elo}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {error && <div className="queue-page__error" role="alert">{error}</div>}
+    </div>
   );
 }

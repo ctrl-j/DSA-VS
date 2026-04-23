@@ -1,0 +1,202 @@
+/* ==========================================================================
+   DSA·VS Global Theme — Purdue Old Gold & Black, tetr.io-inspired
+
+   Colors sourced from Purdue Brand Guidelines:
+   - Old Gold: #CFB991
+   - Boilermaker Gold: #C28E0E
+   - Rush: #DAAA00
+   - Black: #000000
+   - Steel: #555960
+   - Cool Gray: #6F727B
+   - Moon Dust: #BAA892
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@font-face {
+  font-family: 'HUN-din';
+  src: url('/fonts/hun-din.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- Background layers ---- */
+  --bg-root: #050505;
+  --bg-surface: #0a0a09;
+  --bg-panel: #111110;
+  --bg-elevated: #1a1918;
+  --bg-hover: #242320;
+  --bg-input: #0d0d0c;
+
+  /* ---- Purdue Gold scale ---- */
+  --gold-50: #f9f3e7;
+  --gold-100: #f0e3c8;
+  --gold-200: #e5cea0;
+  --gold-300: #dab978;
+  --gold-400: #CFB991;  /* Old Gold — the signature Purdue color */
+  --gold-500: #C28E0E;  /* Boilermaker Gold */
+  --gold-600: #a87a0c;
+  --gold-700: #8E6F3E;
+  --gold-800: #6b530e;
+  --gold-900: #473709;
+
+  /* ---- Primary accent (Purdue palette) ---- */
+  --accent: #CFB991;          /* Old Gold */
+  --accent-hover: #decca8;
+  --accent-muted: #8E6F3E;
+  --accent-bright: #DAAA00;   /* Rush — for high-emphasis moments */
+  --accent-dim: rgba(207, 185, 145, 0.1);
+  --accent-glow: rgba(207, 185, 145, 0.15);
+
+  /* ---- Text ---- */
+  --text-primary: #e4e0da;
+  --text-secondary: #8a8580;
+  --text-muted: #555960;       /* Steel */
+  --text-accent: var(--accent);
+
+  /* ---- Borders ---- */
+  --border: #1e1d1b;
+  --border-accent: rgba(207, 185, 145, 0.2);
+  --border-strong: #333230;
+
+  /* ---- Semantic colors ---- */
+  --success: #22c55e;
+  --success-dim: rgba(34, 197, 94, 0.15);
+  --error: #ef4444;
+  --error-dim: rgba(239, 68, 68, 0.15);
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  /* ---- Difficulty colors ---- */
+  --difficulty-easy: #22c55e;
+  --difficulty-medium: #f59e0b;
+  --difficulty-hard: #ef4444;
+
+  /* ---- Verdict colors ---- */
+  --verdict-pass: #22c55e;
+  --verdict-wrong: #ef4444;
+  --verdict-tle: #f59e0b;
+  --verdict-mle: #f59e0b;
+  --verdict-rte: #ef4444;
+  --verdict-ce: #a855f7;
+
+  /* ---- Typography ---- */
+  --font-body: 'HUN-din', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'HUN-din', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  --text-xs: 0.7rem;
+  --text-sm: 0.8rem;
+  --text-base: 0.9rem;
+  --text-lg: 1.05rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.6rem;
+  --text-3xl: 2rem;
+
+  /* ---- Spacing ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ---- Borders & Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* ---- Transitions ---- */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 350ms ease;
+
+  /* ---- Z-index ---- */
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+}
+
+/* ---- Reset & base ---- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: var(--bg-root);
+  line-height: 1.5;
+  font-feature-settings: "zero" off;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Scrollbar styling ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ---- Selection (Purdue gold tint) ---- */
+::selection {
+  background: rgba(207, 185, 145, 0.3);
+  color: var(--text-primary);
+}
+
+/* ---- Focus ---- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Links ---- */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* ---- Code ---- */
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* ---- Utility classes ---- */
+.gold-text { color: var(--accent); }
+.mono { font-family: var(--font-mono); }
+.text-muted { color: var(--text-secondary); }
+.text-center { text-align: center; }

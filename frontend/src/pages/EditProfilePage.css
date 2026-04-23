@@ -1,0 +1,104 @@
+.edit-profile-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.edit-profile-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.edit-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.edit-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.edit-profile-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.edit-profile-input,
+.edit-profile-textarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-base);
+}
+
+.edit-profile-input:focus,
+.edit-profile-textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.edit-profile-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.edit-profile-submit {
+  padding: var(--space-3) var(--space-6);
+  background: var(--accent);
+  color: var(--bg-root);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.edit-profile-submit:hover {
+  background: var(--accent-hover);
+}
+
+.edit-profile-message {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--success);
+}
+
+.edit-profile-error {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--error);
+}
+
+.edit-profile-back {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.edit-profile-back:hover {
+  color: var(--accent);
+}

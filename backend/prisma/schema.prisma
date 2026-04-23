@@ -124,6 +124,10 @@ model Problem {
   id            String     @id @default(uuid())
   title         String
   statement     String
+  solution      Json?       // {python: "...", cpp: "...", java: "..."}
+  functionName  String?
+  templates     Json?      // {python: "...", cpp: "...", java: "..."}
+  drivers       Json?      // {python: {header, footer}, cpp: {header, footer}, java: {header, footer}}
   difficulty    Difficulty
   category      String
   timeLimitMs   Int        @default(2000)

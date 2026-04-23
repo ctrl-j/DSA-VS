@@ -1,0 +1,73 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 var(--space-6);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--accent-muted);
+  position: relative;
+  z-index: 10;
+}
+
+.navbar__logo {
+  font-size: var(--text-lg);
+  font-weight: 900;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: color var(--transition-fast);
+}
+
+.navbar__logo:hover {
+  color: var(--accent-hover);
+}
+
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.navbar__user {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.navbar__user:hover {
+  color: var(--accent);
+}
+
+.navbar__logout {
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.navbar__logout:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.navbar__login-link {
+  font-size: var(--text-sm);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.navbar__login-link:hover {
+  color: var(--accent-hover);
+}

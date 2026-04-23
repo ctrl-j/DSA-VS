@@ -59,6 +59,7 @@ export {
 } from "./db/report-repo";
 
 export {
+  cancelMatch,
   completeMatch,
   createMatchForUsers,
   createSubmission,

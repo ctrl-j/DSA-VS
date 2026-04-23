@@ -12,9 +12,12 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "monaco-editor": "^0.55.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.1.5"
+    "react-router-dom": "^7.1.5",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

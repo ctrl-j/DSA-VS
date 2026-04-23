@@ -1,41 +1,70 @@
 import { prepareTempDir, compileCode, runCode, cleanupTempDir } from "./sandbox-runner";
 import type { EvaluationResult, TestCaseResult, Verdict } from "./types";
 
-// A test case as it comes from Prisma. We only need these fields.
 interface TestCase {
     id: string;
     input: string;
     expectedOutput: string;
 }
 
-// What the BullMQ worker passes in
+interface DriverParts {
+    header: string;
+    footer: string;
+}
+
 interface EvaluateRequest {
     language: string;
     code: string;
     testCases: TestCase[];
-    timeLimitMs: number;      // from Problem.timeLimitMs
-    memoryLimitMb: number;    // from Problem.memoryLimitMb
+    timeLimitMs: number;
+    memoryLimitMb: number;
+    // LeetCode-style driver parts (if present, wraps user code)
+    drivers?: Record<string, DriverParts> | null;
 }
 
 /**
- * Runs user code against all test cases for a problem.
- *
- * Flow:
- *   1. Write code to temp dir
- *   2. Compile once (if needed)
- *   3. Run against each test case
- *   4. Collect verdicts and count passes
- *   5. Clean up
+ * Assembles the final code to execute.
+ * If drivers exist for this language, wraps user code with header/footer.
+ * Otherwise, uses user code as-is (legacy stdin/stdout mode).
  */
+function assembleCode(userCode: string, language: string, drivers?: Record<string, DriverParts> | null): string {
+    if (!drivers) return userCode;
+
+    const driver = drivers[language];
+    if (!driver) return userCode;
+
+    return driver.header + "\n" + userCode + "\n" + driver.footer;
+}
+
+/**
+ * Compares outputs. Tries JSON-aware comparison first,
+ * falls back to exact string match.
+ */
+function outputsMatch(actual: string, expected: string): boolean {
+    const a = actual.trim();
+    const e = expected.trim();
+
+    // Exact string match
+    if (a === e) return true;
+
+    // Try JSON comparison (handles whitespace/formatting differences)
+    try {
+        const parsedA = JSON.parse(a);
+        const parsedE = JSON.parse(e);
+        return JSON.stringify(parsedA) === JSON.stringify(parsedE);
+    } catch {
+        return false;
+    }
+}
+
 export async function evaluate(req: EvaluateRequest): Promise<EvaluationResult> {
-    const tempDir = await prepareTempDir(req.language, req.code);
+    const finalCode = assembleCode(req.code, req.language, req.drivers);
+    const tempDir = await prepareTempDir(req.language, finalCode);
 
     try {
-        // --- Compile once (no-op for Python) ---
         const compileResult = await compileCode(req.language, tempDir);
 
         if (!compileResult.success) {
-            // Every test case gets COMPILATION_ERROR — code didn't compile
             const results: TestCaseResult[] = req.testCases.map((tc) => ({
                 testCaseId: tc.id,
                 verdict: "COMPILATION_ERROR" as Verdict,
@@ -50,7 +79,6 @@ export async function evaluate(req: EvaluateRequest): Promise<EvaluationResult> 
             };
         }
 
-        // --- Run each test case ---
         const results: TestCaseResult[] = [];
         let passedCount = 0;
 
@@ -63,7 +91,6 @@ export async function evaluate(req: EvaluateRequest): Promise<EvaluationResult> 
                 req.memoryLimitMb,
             );
 
-            // Determine the verdict for this test case
             let verdict: Verdict;
 
             if (runResult.timedOut) {
@@ -72,7 +99,7 @@ export async function evaluate(req: EvaluateRequest): Promise<EvaluationResult> 
                 verdict = "MEMORY_LIMIT_EXCEEDED";
             } else if (runResult.exitCode !== 0) {
                 verdict = "RUNTIME_ERROR";
-            } else if (runResult.stdout.trim() === tc.expectedOutput.trim()) {
+            } else if (outputsMatch(runResult.stdout, tc.expectedOutput)) {
                 verdict = "PASS";
                 passedCount++;
             } else {

@@ -1,19 +1,23 @@
-import type { ServerResponse } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import type { URL } from "node:url";
 import {
+  getDraft,
   getLeaderboard,
   getMatchById,
   getMatchHistory,
+  saveDraft,
   type SafeUser,
 } from "../../database";
-import { getTrimmedString, modeFromQuery, parsePositiveInt, sendSuccess } from "../http-utils";
+import { prisma } from "../../db/client";
+import { getTrimmedString, modeFromQuery, parsePositiveInt, readJsonBody, sendSuccess } from "../http-utils";
 import { ApiException } from "../types";
 
 export async function handleMatchesRoutes(
   method: string | undefined,
   url: URL,
   res: ServerResponse,
-  currentUser: SafeUser
+  currentUser: SafeUser,
+  req: IncomingMessage
 ): Promise<boolean> {
   if (method === "GET" && url.pathname === "/api/matches/history") {
     const limit = parsePositiveInt(url.searchParams.get("limit"), 20, 1, 100);
@@ -60,6 +64,62 @@ export async function handleMatchesRoutes(
     const leaderboard = await getLeaderboard(limit);
     sendSuccess(res, 200, leaderboard);
     return true;
+  }
+
+  // Solution endpoint
+  const solutionMatch = url.pathname.match(/^\/api\/matches\/([^/]+)\/solution$/);
+  if (method === "GET" && solutionMatch) {
+    const matchId = solutionMatch[1];
+    const match = await getMatchById(matchId);
+    if (!match) {
+      throw new ApiException(404, "NOT_FOUND", "match not found.");
+    }
+
+    const allowed =
+      currentUser.isAdmin || match.participants.some((p) => p.userId === currentUser.id);
+    if (!allowed) {
+      throw new ApiException(403, "FORBIDDEN", "you do not have access to this match.");
+    }
+
+    if (match.status !== "COMPLETED" && match.status !== "CANCELLED") {
+      throw new ApiException(403, "FORBIDDEN", "solution is only available after the match ends.");
+    }
+
+    if (!match.problemId) {
+      throw new ApiException(404, "NOT_FOUND", "no problem associated with this match.");
+    }
+
+    const problem = await prisma.problem.findUnique({
+      where: { id: match.problemId },
+      select: { solution: true },
+    });
+
+    if (!problem || !problem.solution) {
+      throw new ApiException(404, "NOT_FOUND", "no solution available for this problem.");
+    }
+
+    sendSuccess(res, 200, { solution: problem.solution });
+    return true;
+  }
+
+  // Draft endpoints
+  const draftMatch = url.pathname.match(/^\/api\/matches\/([^/]+)\/draft$/);
+  if (draftMatch) {
+    const matchId = draftMatch[1];
+
+    if (method === "POST") {
+      const body = await readJsonBody(req);
+      const code = typeof body.code === "string" ? body.code : "";
+      await saveDraft(matchId, currentUser.id, code);
+      sendSuccess(res, 200, { saved: true });
+      return true;
+    }
+
+    if (method === "GET") {
+      const draft = await getDraft(matchId, currentUser.id);
+      sendSuccess(res, 200, draft ? { code: draft.code } : { code: null });
+      return true;
+    }
   }
 
   return false;

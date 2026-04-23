@@ -10,12 +10,11 @@ import { now } from "./common";
 export async function findProblemForMatch(
   preferredDifficulty?: Difficulty
 ): Promise<{ id: string; title: string; statement: string } | null> {
-  const problem = await prisma.problem.findFirst({
+  const problems = await prisma.problem.findMany({
     where: {
       isActive: true,
       ...(preferredDifficulty ? { difficulty: preferredDifficulty } : {}),
     },
-    orderBy: { createdAt: "asc" },
     select: {
       id: true,
       title: true,
@@ -23,7 +22,11 @@ export async function findProblemForMatch(
     },
   });
 
-  return problem;
+  if (problems.length === 0) return null;
+
+  // Pick a random problem
+  const index = Math.floor(Math.random() * problems.length);
+  return problems[index];
 }
 
 export async function createMatchForUsers(
@@ -280,6 +283,16 @@ export async function saveDraft(matchId: string, userId: string, code: string) {
     },
     update: {
       code,
+    },
+  });
+}
+
+export async function cancelMatch(matchId: string) {
+  return prisma.match.update({
+    where: { id: matchId },
+    data: {
+      status: MatchStatus.CANCELLED,
+      endedAt: now(),
     },
   });
 }

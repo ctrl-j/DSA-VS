@@ -32,7 +32,9 @@ const TASK_CONCURRENCY = Math.floor(taskConcurrencyValue);
 const concurrentClientHandler = new ConcurrentClientHandler(TASK_CONCURRENCY);
 const globalMatchQueue = new GlobalMatchQueue();
 const wsRuntime = createWsRuntime(globalMatchQueue);
-startExecutionWorker(wsRuntime.sendToUser);
+startExecutionWorker(wsRuntime.sendToUser, (matchId, _userId) => {
+  void wsRuntime.endMatchEarly(matchId, "all_tests_passed");
+});
 
 async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? "/", "http://localhost");
@@ -91,7 +93,7 @@ async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Pro
     return;
   }
 
-  if (await handleMatchesRoutes(req.method, url, res, currentUser)) {
+  if (await handleMatchesRoutes(req.method, url, res, currentUser, req)) {
     return;
   }
 

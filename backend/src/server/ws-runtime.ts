@@ -4,6 +4,7 @@ import { URL } from "node:url";
 import { MatchMode } from "@prisma/client";
 import { WebSocket, WebSocketServer } from "ws";
 import {
+  cancelMatch,
   completeMatch,
   createChallenge,
   createMatchForUsers,
@@ -25,6 +26,7 @@ export interface WsRuntime {
   sendToUser: (userId: string, event: string, payload: unknown) => void;
   handleUpgrade: (request: IncomingMessage, socket: Socket, head: Buffer) => void;
   getClientCount: () => number;
+  endMatchEarly: (matchId: string, reason: string) => Promise<void>;
 }
 
 export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
@@ -32,6 +34,8 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
   const socketsByUserId = new Map<string, Set<LiveWebSocket>>();
   const userIdBySocket = new Map<LiveWebSocket, WsAuthContext>();
   const activeMatchTimers = new Map<string, ActiveMatchTimer>();
+  // Track pending cancel votes: matchId → userId of the player who requested
+  const pendingCancelVotes = new Map<string, string>();
 
   function sendWsEvent(socket: LiveWebSocket, event: string, payload: unknown): void {
     if (socket.readyState !== WebSocket.OPEN) {
@@ -75,6 +79,57 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
     return Math.round(myElo + k * (score - expected));
   }
 
+  async function finalizeMatch(matchId: string, reason: string): Promise<void> {
+    try {
+      const match = await getMatchById(matchId);
+      if (!match || match.participants.length !== 2 || match.status !== "ACTIVE") {
+        return;
+      }
+
+      const first = match.participants[0];
+      const second = match.participants[1];
+
+      const scoreA =
+        first.passedCount > second.passedCount
+          ? 1
+          : second.passedCount > first.passedCount
+            ? 0
+            : 0.5;
+      const scoreB = 1 - scoreA;
+
+      const newEloA = calculateElo(first.startElo, second.startElo, scoreA);
+      const newEloB = calculateElo(second.startElo, first.startElo, scoreB);
+
+      await completeMatch(
+        matchId,
+        { userId: first.userId, endElo: newEloA, passedCount: first.passedCount },
+        { userId: second.userId, endElo: newEloB, passedCount: second.passedCount }
+      );
+
+      let winnerUserId: string | null = null;
+      if (scoreA === 1) {
+        winnerUserId = first.userId;
+      } else if (scoreB === 1) {
+        winnerUserId = second.userId;
+      }
+
+      sendToUser(first.userId, "match.ended", {
+        matchId,
+        winnerUserId,
+        reason,
+        eloDelta: newEloA - first.startElo,
+      });
+      sendToUser(second.userId, "match.ended", {
+        matchId,
+        winnerUserId,
+        reason,
+        eloDelta: newEloB - second.startElo,
+      });
+    } catch (error) {
+      console.error("Failed to finalize match", error);
+    }
+  }
+
   function startMatchTimer(matchId: string, participantIds: [string, string]): void {
     const existing = activeMatchTimers.get(matchId);
     if (existing) {
@@ -103,62 +158,7 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
       clearInterval(interval);
       activeMatchTimers.delete(matchId);
 
-      try {
-        const match = await getMatchById(matchId);
-        if (!match || match.participants.length !== 2) {
-          return;
-        }
-
-        const first = match.participants[0];
-        const second = match.participants[1];
-
-        const scoreA =
-          first.passedCount > second.passedCount
-            ? 1
-            : second.passedCount > first.passedCount
-              ? 0
-              : 0.5;
-        const scoreB = 1 - scoreA;
-
-        const newEloA = calculateElo(first.startElo, second.startElo, scoreA);
-        const newEloB = calculateElo(second.startElo, first.startElo, scoreB);
-
-        await completeMatch(
-          matchId,
-          {
-            userId: first.userId,
-            endElo: newEloA,
-            passedCount: first.passedCount,
-          },
-          {
-            userId: second.userId,
-            endElo: newEloB,
-            passedCount: second.passedCount,
-          }
-        );
-
-        let winnerUserId: string | null = null;
-        if (scoreA === 1) {
-          winnerUserId = first.userId;
-        } else if (scoreB === 1) {
-          winnerUserId = second.userId;
-        }
-
-        sendToUser(first.userId, "match.ended", {
-          matchId,
-          winnerUserId,
-          reason: "timer_expired",
-          eloDelta: newEloA - first.startElo,
-        });
-        sendToUser(second.userId, "match.ended", {
-          matchId,
-          winnerUserId,
-          reason: "timer_expired",
-          eloDelta: newEloB - second.startElo,
-        });
-      } catch (error) {
-        console.error("Failed to finalize match", error);
-      }
+      await finalizeMatch(matchId, "timer_expired");
     }, 1000);
 
     activeMatchTimers.set(matchId, {
@@ -384,6 +384,111 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
       return;
     }
 
+    // ---- Match cancel vote flow ----
+
+    if (event.event === "match.cancel.request") {
+      const matchId = getTrimmedString(isObject(event.payload) ? event.payload.matchId : "");
+      if (!matchId) {
+        sendWsEvent(socket, "error", { code: "VALIDATION_ERROR", message: "matchId is required." });
+        return;
+      }
+
+      const match = await getMatchById(matchId);
+      if (!match || match.status !== "ACTIVE") {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "Active match not found." });
+        return;
+      }
+
+      const me = match.participants.find((p) => p.userId === context.userId);
+      const opponent = match.participants.find((p) => p.userId !== context.userId);
+      if (!me || !opponent) {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "Participant not found." });
+        return;
+      }
+
+      // Don't allow duplicate requests
+      if (pendingCancelVotes.has(matchId)) {
+        sendWsEvent(socket, "error", { code: "CONFLICT", message: "Cancel vote already pending." });
+        return;
+      }
+
+      pendingCancelVotes.set(matchId, context.userId);
+
+      // Tell the requester we're waiting
+      sendToUser(context.userId, "match.cancel.waiting", { matchId });
+
+      // Ask the opponent to vote
+      sendToUser(opponent.userId, "match.cancel.proposed", {
+        matchId,
+        requestedBy: context.username,
+      });
+
+      return;
+    }
+
+    if (event.event === "match.cancel.accept") {
+      const matchId = getTrimmedString(isObject(event.payload) ? event.payload.matchId : "");
+      if (!matchId) {
+        sendWsEvent(socket, "error", { code: "VALIDATION_ERROR", message: "matchId is required." });
+        return;
+      }
+
+      const requesterId = pendingCancelVotes.get(matchId);
+      if (!requesterId) {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "No pending cancel vote." });
+        return;
+      }
+
+      // Only the non-requester can accept
+      if (requesterId === context.userId) {
+        sendWsEvent(socket, "error", { code: "FORBIDDEN", message: "You cannot accept your own cancel request." });
+        return;
+      }
+
+      pendingCancelVotes.delete(matchId);
+
+      // Stop the match timer
+      const timer = activeMatchTimers.get(matchId);
+      if (timer) {
+        clearInterval(timer.interval);
+        activeMatchTimers.delete(matchId);
+      }
+
+      // Cancel the match in DB
+      await cancelMatch(matchId);
+
+      // Notify both players
+      const match = await getMatchById(matchId);
+      if (match) {
+        for (const p of match.participants) {
+          sendToUser(p.userId, "match.cancelled", { matchId, reason: "mutual_agreement" });
+        }
+      }
+
+      return;
+    }
+
+    if (event.event === "match.cancel.decline") {
+      const matchId = getTrimmedString(isObject(event.payload) ? event.payload.matchId : "");
+      if (!matchId) {
+        sendWsEvent(socket, "error", { code: "VALIDATION_ERROR", message: "matchId is required." });
+        return;
+      }
+
+      const requesterId = pendingCancelVotes.get(matchId);
+      if (!requesterId) {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "No pending cancel vote." });
+        return;
+      }
+
+      pendingCancelVotes.delete(matchId);
+
+      // Tell the requester their cancel was declined
+      sendToUser(requesterId, "match.cancel.rejected", { matchId });
+
+      return;
+    }
+
     if (event.event === "submission.create") {
       if (!isObject(event.payload)) {
         sendWsEvent(socket, "error", {
@@ -577,5 +682,14 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
     sendToUser,
     handleUpgrade,
     getClientCount: () => wsServer.clients.size,
+    endMatchEarly: async (matchId: string, reason: string) => {
+      // Stop the timer if running
+      const timer = activeMatchTimers.get(matchId);
+      if (timer) {
+        clearInterval(timer.interval);
+        activeMatchTimers.delete(matchId);
+      }
+      await finalizeMatch(matchId, reason);
+    },
   };
 }

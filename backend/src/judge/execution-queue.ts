@@ -56,7 +56,11 @@ export async function enqueueSubmission(data: ExecutionJobData): Promise<void> {
 // access to sendToUser from WsRuntime, which isn't available at import time.
 // ---------------------------------------------------------------------------
 
-export function startExecutionWorker(sendToUser: SendToUser): Worker {
+// Called when a player passes all test cases — ws-runtime provides this
+// to handle match ending with ELO calculation
+type OnAllTestsPassed = (matchId: string, userId: string) => void;
+
+export function startExecutionWorker(sendToUser: SendToUser, onAllTestsPassed?: OnAllTestsPassed): Worker {
     const worker = new Worker<ExecutionJobData>(
         "code-execution",
         async (job) => {
@@ -92,6 +96,7 @@ export function startExecutionWorker(sendToUser: SendToUser): Worker {
                 testCases: problem.testCases,
                 timeLimitMs: problem.timeLimitMs,
                 memoryLimitMb: problem.memoryLimitMb,
+                drivers: problem.drivers as Record<string, { header: string; footer: string }> | null,
             });
 
             // 4. Update submission in DB
@@ -131,6 +136,11 @@ export function startExecutionWorker(sendToUser: SendToUser): Worker {
                 mePassed: opponent.passedCount,
                 opponentPassed: me.passedCount,
             });
+
+            // 7. If all tests passed, trigger early match end
+            if (result.passedCount === result.totalCount && onAllTestsPassed) {
+                onAllTestsPassed(matchId, userId);
+            }
         },
         {
             connection: redisConnection,

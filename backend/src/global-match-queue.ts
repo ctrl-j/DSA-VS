@@ -16,8 +16,8 @@ interface QueueSnapshotEntry {
   elo: number;
 }
 
-interface RankedPair {
-  mode: "ranked";
+interface MatchPair {
+  mode: "ranked" | "ffa";
   users: [User, User];
   matchedAtMs: number;
 }
@@ -27,7 +27,7 @@ interface JoinResult {
   mode: "ranked" | "ffa";
   position: number | null;
   duplicate: boolean;
-  pair: RankedPair | null;
+  pair: MatchPair | null;
 }
 
 interface LeaveResult {
@@ -78,7 +78,7 @@ export class GlobalMatchQueue {
     });
     this.memberships.set(user.userId, mode);
 
-    const pair = mode === "ranked" ? this.tryMakeRankedPair() : null;
+    const pair = mode === "ranked" ? this.tryMakeMatchPair() : this.tryMakeFfaPair();
     return {
       joined: true,
       mode,
@@ -138,7 +138,24 @@ export class GlobalMatchQueue {
     };
   }
 
-  private tryMakeRankedPair(): RankedPair | null {
+  private tryMakeFfaPair(): MatchPair | null {
+    const ffa = this.queues.ffa;
+    if (ffa.length < 2) return null;
+
+    // FFA: match any two players immediately, no ELO restrictions
+    const first = ffa.splice(0, 1)[0];
+    const second = ffa.splice(0, 1)[0];
+    this.memberships.delete(first.user.userId);
+    this.memberships.delete(second.user.userId);
+
+    return {
+      mode: "ffa",
+      users: [first.user, second.user],
+      matchedAtMs: Date.now(),
+    };
+  }
+
+  private tryMakeMatchPair(): MatchPair | null {
     const ranked = this.queues.ranked;
     if (ranked.length < 2) {
       return null;

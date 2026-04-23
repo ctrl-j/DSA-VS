@@ -24,11 +24,11 @@ export const LANGUAGES: Record<string, LanguageConfig> = {
         compileCmd: (codePath) => ["g++", "-o", "/code/solution", codePath],
         runCmd: (_codePath) => ["/code/solution"]
     },
-    java: { 
+    java: {
         image: "dsavs-runner-java",
         compiled: true,
-        fileName: "Solution.java",
+        fileName: "Main.java",
         compileCmd: (codePath) => ["javac", codePath],
-        runCmd: (_codePath) => ["java", "-cp", "/code", "Solution"],
+        runCmd: (_codePath) => ["java", "-cp", "/code", "Main"],
     },
 };
