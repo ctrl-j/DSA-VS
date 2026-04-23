@@ -61,7 +61,10 @@ export async function handleMatchesRoutes(
 
   if (method === "GET" && url.pathname === "/api/leaderboard") {
     const limit = parsePositiveInt(url.searchParams.get("limit"), 100, 1, 500);
-    const leaderboard = await getLeaderboard(limit);
+    const sortByRaw = url.searchParams.get("sortBy") || "elo";
+    const sortBy = sortByRaw === "createdAt" ? "createdAt" : "elo";
+
+    const leaderboard = await getLeaderboard(limit, sortBy);
     sendSuccess(res, 200, leaderboard);
     return true;
   }
