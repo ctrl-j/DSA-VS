@@ -157,6 +157,31 @@ export interface ApiFailure {
 
 export type ApiEnvelope<T> = ApiSuccess<T> | ApiFailure;
 
+// ---- Achievements ----
+export type AchievementType =
+  | "FIRST_BLOOD"
+  | "WIN_STREAK_X3"
+  | "UNDERDOG"
+  | "SPEED_CODER"
+  | "PERFECT_RUN"
+  | "COMEBACK_KING"
+  | "POLYGLOT"
+  | "DAILY_GRINDER"
+  | "TOP_100"
+  | "LEGEND";
+
+export interface Achievement {
+  id: string;
+  type: AchievementType;
+  name: string;
+  description: string;
+  earnedAt: string;
+}
+
+export interface WsAchievementsUnlocked {
+  achievements: AchievementType[];
+}
+
 // ---- Match History ----
 export interface MatchHistoryEntry {
   match: {

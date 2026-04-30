@@ -1,0 +1,113 @@
+.submit-problem-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-6);
+}
+
+.submit-problem__title {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+.submit-problem__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.submit-problem__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.submit-problem__label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.submit-problem__input,
+.submit-problem__select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-base);
+}
+
+.submit-problem__input:focus,
+.submit-problem__select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.submit-problem__textarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  min-height: 160px;
+  resize: vertical;
+  transition: border-color var(--transition-base);
+}
+
+.submit-problem__textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.submit-problem__select {
+  cursor: pointer;
+}
+
+.submit-problem__submit {
+  padding: var(--space-3) var(--space-6);
+  background: var(--accent);
+  color: var(--bg-root);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.submit-problem__submit:hover {
+  background: var(--accent-hover);
+}
+
+.submit-problem__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-problem__message {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--success);
+  margin-top: var(--space-4);
+}
+
+.submit-problem__error {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--error);
+  margin-top: var(--space-4);
+}

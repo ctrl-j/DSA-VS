@@ -7,28 +7,33 @@ datasource db {
 }
 
 model User {
-  id                     String             @id @default(uuid())
-  username               String             @unique
-  passwordHash           String
-  elo                    Int                @default(1000)
-  isAdmin                Boolean            @default(false)
-  isBanned               Boolean            @default(false)
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
-  blocksReceived         Block[]            @relation("Blocked")
-  blocksInitiated        Block[]            @relation("Blocker")
-  bugReports             BugReport[]
-  drafts                 Draft[]
-  matchParticipants      MatchParticipant[]
-  messagesReceived       Message[]          @relation("MessageReceiver")
-  messagesSent           Message[]          @relation("MessageSender")
-  profile                Profile?
-  receivedFriendRequests FriendRequest[]    @relation("FriendRequestReceiver")
-  reportsMade            Report[]           @relation("ReportReporter")
-  reportsReceived        Report[]           @relation("ReportReported")
-  sentFriendRequests     FriendRequest[]    @relation("FriendRequestSender")
-  sessions               Session[]
-  submissions            Submission[]
+  id                       String                 @id @default(uuid())
+  username                 String                 @unique
+  passwordHash             String
+  elo                      Int                    @default(1000)
+  isAdmin                  Boolean                @default(false)
+  isBanned                 Boolean                @default(false)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  blocksReceived           Block[]                @relation("Blocked")
+  blocksInitiated          Block[]                @relation("Blocker")
+  bugReports               BugReport[]
+  drafts                   Draft[]
+  matchParticipants        MatchParticipant[]
+  messagesReceived         Message[]              @relation("MessageReceiver")
+  messagesSent             Message[]              @relation("MessageSender")
+  profile                  Profile?
+  receivedFriendRequests   FriendRequest[]        @relation("FriendRequestReceiver")
+  reportsMade              Report[]               @relation("ReportReporter")
+  reportsReceived          Report[]               @relation("ReportReported")
+  sentFriendRequests       FriendRequest[]        @relation("FriendRequestSender")
+  sessions                 Session[]
+  submissions              Submission[]
+  achievements             UserAchievement[]
+  submittedProblems        Problem[]              @relation("ProblemSubmitter")
+  focusSessions            FocusSession[]
+  evaluationsGiven         InstructorEvaluation[] @relation("InstructorEvaluations")
+  evaluationsReceived      InstructorEvaluation[] @relation("StudentEvaluations")
 }
 
 model Profile {
@@ -121,24 +126,29 @@ model BugReport {
 }
 
 model Problem {
-  id            String     @id @default(uuid())
-  title         String
-  statement     String
-  solution      Json?       // {python: "...", cpp: "...", java: "..."}
-  functionName  String?
-  templates     Json?      // {python: "...", cpp: "...", java: "..."}
-  drivers       Json?      // {python: {header, footer}, cpp: {header, footer}, java: {header, footer}}
-  difficulty    Difficulty
-  category      String
-  timeLimitMs   Int        @default(2000)
-  memoryLimitMb Int        @default(256)
-  isActive      Boolean    @default(true)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  matches       Match[]
-  testCases     TestCase[]
+  id                String         @id @default(uuid())
+  title             String
+  statement         String
+  solution          Json?          // {python: "...", cpp: "...", java: "..."}
+  functionName      String?
+  templates         Json?          // {python: "...", cpp: "...", java: "..."}
+  drivers           Json?          // {python: {header, footer}, cpp: {header, footer}, java: {header, footer}}
+  difficulty        Difficulty
+  category          String
+  timeLimitMs       Int            @default(2000)
+  memoryLimitMb     Int            @default(256)
+  isActive          Boolean        @default(true)
+  approvalStatus    ApprovalStatus @default(ACTIVE)
+  submittedById     String?
+  rejectionFeedback String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  matches           Match[]
+  testCases         TestCase[]
+  submittedBy       User?          @relation("ProblemSubmitter", fields: [submittedById], references: [id])
 
   @@index([difficulty, category, isActive])
+  @@index([submittedById, approvalStatus])
 }
 
 model TestCase {
@@ -155,22 +165,26 @@ model TestCase {
 }
 
 model Match {
-  id           String             @id @default(uuid())
+  id           String                 @id @default(uuid())
   mode         MatchMode
-  status       MatchStatus        @default(PENDING)
+  status       MatchStatus            @default(PENDING)
   problemId    String?
+  roomName     String?
+  passwordHash String?
   startedAt    DateTime?
   endedAt      DateTime?
   durationSec  Int?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
   drafts       Draft[]
   participants MatchParticipant[]
-  problem      Problem?           @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  problem      Problem?               @relation(fields: [problemId], references: [id], onDelete: SetNull)
   submissions  Submission[]
+  evaluations  InstructorEvaluation[]
 
   @@index([status, createdAt])
   @@index([mode, createdAt])
+  @@index([roomName])
 }
 
 model MatchParticipant {
@@ -261,4 +275,64 @@ enum SubmissionStatus {
   RUNNING
   COMPLETED
   FAILED
+}
+
+enum AchievementType {
+  FIRST_BLOOD
+  WIN_STREAK_X3
+  UNDERDOG
+  SPEED_CODER
+  PERFECT_RUN
+  COMEBACK_KING
+  POLYGLOT
+  DAILY_GRINDER
+  TOP_100
+  LEGEND
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+}
+
+model UserAchievement {
+  id        String          @id @default(uuid())
+  userId    String
+  type      AchievementType
+  earnedAt  DateTime        @default(now())
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId])
+}
+
+model FocusSession {
+  id         String   @id @default(uuid())
+  userId     String
+  category   String
+  durationMs Int
+  date       DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, category])
+}
+
+model InstructorEvaluation {
+  id           String   @id @default(uuid())
+  instructorId String
+  studentId    String
+  matchId      String?
+  score        Int
+  feedback     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  instructor   User     @relation("InstructorEvaluations", fields: [instructorId], references: [id], onDelete: Cascade)
+  student      User     @relation("StudentEvaluations", fields: [studentId], references: [id], onDelete: Cascade)
+  match        Match?   @relation(fields: [matchId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([instructorId])
 }

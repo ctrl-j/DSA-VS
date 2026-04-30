@@ -1,0 +1,161 @@
+.lb-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: calc(100vh - 48px);
+  padding: var(--space-10) var(--space-6);
+}
+
+.lb__title {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: var(--space-8);
+}
+
+.lb__container {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Table */
+.lb__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lb__table th {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.lb__table td {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.lb__table tr:hover td {
+  background: var(--bg-hover);
+}
+
+/* Current user row highlight */
+.lb__row--current td {
+  background: var(--accent-dim);
+  border-top: 1px solid var(--border-accent);
+  border-bottom: 1px solid var(--border-accent);
+}
+
+.lb__row--current:hover td {
+  background: var(--accent-dim);
+}
+
+.lb__username--current {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Rank */
+.lb__rank {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Elo */
+.lb__elo {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* Win rate */
+.lb__winrate {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+/* States */
+.lb__loading,
+.lb__empty,
+.lb__error {
+  text-align: center;
+  padding: var(--space-10);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.lb__error {
+  color: var(--error);
+}
+
+/* My Position card */
+.lb__my-position {
+  margin-top: var(--space-8);
+  padding: var(--space-6);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+}
+
+.lb__my-position-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-5);
+  text-align: center;
+}
+
+.lb__my-position-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: var(--space-4);
+}
+
+.lb__my-position-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lb__my-position-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lb__my-position-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+@media (max-width: 600px) {
+  .lb__table th,
+  .lb__table td {
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .lb__my-position-stats {
+    flex-direction: column;
+    align-items: center;
+  }
+}

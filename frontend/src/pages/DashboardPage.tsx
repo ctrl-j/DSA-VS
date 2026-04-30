@@ -105,6 +105,14 @@ export function DashboardPage() {
           <span className="dashboard__action-label">Play</span>
           <span className="dashboard__action-sub">Find a match</span>
         </Link>
+        <Link to="/private-match" className="dashboard__action-card">
+          <span className="dashboard__action-label">Private</span>
+          <span className="dashboard__action-sub">Create or join</span>
+        </Link>
+        <Link to="/leaderboard" className="dashboard__action-card">
+          <span className="dashboard__action-label">Leaderboard</span>
+          <span className="dashboard__action-sub">Rankings</span>
+        </Link>
         <Link to="/history" className="dashboard__action-card">
           <span className="dashboard__action-label">History</span>
           <span className="dashboard__action-sub">Match history</span>
@@ -113,7 +121,47 @@ export function DashboardPage() {
           <span className="dashboard__action-label">Stats</span>
           <span className="dashboard__action-sub">Charts &amp; analytics</span>
         </Link>
+        <Link to="/global-stats" className="dashboard__action-card">
+          <span className="dashboard__action-label">Global</span>
+          <span className="dashboard__action-sub">Community stats</span>
+        </Link>
+        <Link to="/problems/submit" className="dashboard__action-card">
+          <span className="dashboard__action-label">Submit</span>
+          <span className="dashboard__action-sub">Add a problem</span>
+        </Link>
+        <Link to="/focus" className="dashboard__action-card">
+          <span className="dashboard__action-label">Focus</span>
+          <span className="dashboard__action-sub">Practice patterns</span>
+        </Link>
+        <Link to="/language-stats" className="dashboard__action-card">
+          <span className="dashboard__action-label">Languages</span>
+          <span className="dashboard__action-sub">Language stats</span>
+        </Link>
       </div>
+
+      {user.isAdmin && (
+        <div className="dashboard__admin-section">
+          <span className="dashboard__admin-heading">Admin</span>
+          <div className="dashboard__actions">
+            <Link to="/admin/problems" className="dashboard__action-card dashboard__action-card--admin">
+              <span className="dashboard__action-label">Review</span>
+              <span className="dashboard__action-sub">Pending submissions</span>
+            </Link>
+            <Link to="/admin/reports/users" className="dashboard__action-card dashboard__action-card--admin">
+              <span className="dashboard__action-label">Reports</span>
+              <span className="dashboard__action-sub">User reports</span>
+            </Link>
+            <Link to="/admin/bug-reports" className="dashboard__action-card dashboard__action-card--admin">
+              <span className="dashboard__action-label">Bugs</span>
+              <span className="dashboard__action-sub">Bug reports</span>
+            </Link>
+            <Link to="/admin/chats" className="dashboard__action-card dashboard__action-card--admin">
+              <span className="dashboard__action-label">Chats</span>
+              <span className="dashboard__action-sub">View user chats</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="dashboard__stats">
         <div className="dashboard__stat">

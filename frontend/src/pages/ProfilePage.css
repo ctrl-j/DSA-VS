@@ -100,6 +100,144 @@
   color: var(--accent);
 }
 
+/* ---- Top Language ---- */
+.profile-top-language {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+
+.profile-top-language:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.profile-top-language__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.profile-top-language__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.profile-top-language__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.profile-top-language__record {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ---- Achievements ---- */
+.profile-achievements {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.profile-achievements-title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.profile-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.profile-badge {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  cursor: default;
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+
+.profile-badge:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.profile-badge__icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.profile-badge__tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  min-width: 180px;
+  max-width: 240px;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.profile-badge:hover .profile-badge__tooltip {
+  display: flex;
+}
+
+.profile-badge__tooltip-name {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.profile-badge__tooltip-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.profile-badge__tooltip-date {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 .profile-loading,
 .profile-error {
   display: flex;

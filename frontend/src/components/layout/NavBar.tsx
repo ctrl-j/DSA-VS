@@ -18,6 +18,11 @@ export function NavBar() {
         <div className="navbar__right">
           {user ? (
             <>
+              {user.isAdmin && (
+                <Link to="/admin/problems" className="navbar__admin-link">
+                  Review
+                </Link>
+              )}
               <button
                 type="button"
                 className="navbar__friends-btn"

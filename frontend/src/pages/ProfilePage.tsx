@@ -3,7 +3,39 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../services/api";
-import type { User } from "../types";
+import type { Achievement, User } from "../types";
+
+interface LangWinLossEntry {
+  language: string;
+  wins: number;
+  losses: number;
+  total: number;
+  winRate: number;
+}
+
+interface LanguageStatsResponse {
+  winLoss: LangWinLossEntry[];
+  testCases: { language: string; totalPassed: number }[];
+}
+
+const LANGUAGE_LABEL: Record<string, string> = {
+  python: "Python",
+  cpp: "C++",
+  java: "Java",
+};
+
+// "Most prominent" = highest win rate among languages with at least 3 matches.
+// Fall back to the most-played language if none meet the threshold.
+function pickTopLanguage(entries: LangWinLossEntry[]): LangWinLossEntry | null {
+  if (entries.length === 0) return null;
+  const qualified = entries.filter((e) => e.total >= 3);
+  if (qualified.length === 0) {
+    return [...entries].sort((a, b) => b.total - a.total)[0];
+  }
+  return [...qualified].sort(
+    (a, b) => b.winRate - a.winRate || b.total - a.total
+  )[0];
+}
 
 // Simple default avatar — gold silhouette on dark background
 const DEFAULT_AVATAR =
@@ -15,6 +47,19 @@ const DEFAULT_AVATAR =
     '<ellipse cx="48" cy="76" rx="28" ry="20" fill="#8E6F3E"/>' +
     '</svg>'
   );
+
+const ACHIEVEMENT_ICONS: Record<string, string> = {
+  FIRST_BLOOD: "\u2694\uFE0F",
+  WIN_STREAK_X3: "\uD83D\uDD25",
+  UNDERDOG: "\uD83D\uDC3A",
+  SPEED_CODER: "\u26A1",
+  PERFECT_RUN: "\uD83D\uDCAF",
+  COMEBACK_KING: "\uD83D\uDC51",
+  POLYGLOT: "\uD83C\uDF0D",
+  DAILY_GRINDER: "\uD83D\uDCAA",
+  TOP_100: "\uD83C\uDFC6",
+  LEGEND: "\u2B50",
+};
 
 function getRankLabel(elo: number): string {
   if (elo >= 2000) return "GRANDMASTER";
@@ -28,6 +73,8 @@ function getRankLabel(elo: number): string {
 export function ProfilePage() {
   const { token } = useAuth();
   const [user, setUser] = useState<User | null>(null);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [topLanguage, setTopLanguage] = useState<LangWinLossEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,8 +84,18 @@ export function ProfilePage() {
 
     async function fetchProfile() {
       try {
-        const data = await api<User>("GET", "/api/me", { token: token! });
-        if (!cancelled) setUser(data);
+        const [data, achs, langStats] = await Promise.all([
+          api<User>("GET", "/api/me", { token: token! }),
+          api<Achievement[]>("GET", "/api/me/achievements", { token: token! }),
+          api<LanguageStatsResponse>("GET", "/api/me/language-stats", {
+            token: token!,
+          }),
+        ]);
+        if (!cancelled) {
+          setUser(data);
+          setAchievements(achs);
+          setTopLanguage(pickTopLanguage(langStats.winLoss));
+        }
       } catch (e: any) {
         if (!cancelled) setError(e.message || "Failed to load profile");
       } finally {
@@ -80,6 +137,49 @@ export function ProfilePage() {
         <p className={`profile-bio ${!user.profile?.bio ? "profile-bio--empty" : ""}`}>
           {user.profile?.bio || "No bio yet"}
         </p>
+
+        {topLanguage && (
+          <>
+            <div className="profile-divider" />
+            <Link to="/language-stats" className="profile-top-language">
+              <span className="profile-top-language__label">Top Language</span>
+              <span className="profile-top-language__name">
+                {LANGUAGE_LABEL[topLanguage.language.toLowerCase()] ?? topLanguage.language}
+              </span>
+              <span className="profile-top-language__stats">
+                {Math.round(topLanguage.winRate * 100)}% win rate
+                <span className="profile-top-language__record">
+                  {topLanguage.wins}W – {topLanguage.losses}L
+                </span>
+              </span>
+            </Link>
+          </>
+        )}
+
+        {achievements.length > 0 && (
+          <>
+            <div className="profile-divider" />
+            <div className="profile-achievements">
+              <span className="profile-achievements-title">Achievements</span>
+              <div className="profile-badges">
+                {achievements.map((ach) => (
+                  <div key={ach.id} className="profile-badge" title={`${ach.name} — ${new Date(ach.earnedAt).toLocaleDateString()}`}>
+                    <span className="profile-badge__icon">
+                      {ACHIEVEMENT_ICONS[ach.type] || "\uD83C\uDFC5"}
+                    </span>
+                    <div className="profile-badge__tooltip">
+                      <span className="profile-badge__tooltip-name">{ach.name}</span>
+                      <span className="profile-badge__tooltip-desc">{ach.description}</span>
+                      <span className="profile-badge__tooltip-date">
+                        Earned {new Date(ach.earnedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="profile-divider" />
 

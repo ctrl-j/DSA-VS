@@ -11,6 +11,10 @@ import { handleMatchesRoutes } from "./server/routes/matches-routes";
 import { handleMeRoutes } from "./server/routes/me-routes";
 import { handleQueueTaskRoutes } from "./server/routes/queue-task-routes";
 import { handleReportsAdminRoutes } from "./server/routes/reports-admin-routes";
+import { handlePrivateMatchRoutes } from "./server/routes/private-match-routes";
+import { handleFocusLanguageRoutes } from "./server/routes/focus-language-routes";
+import { handleProblemRoutes } from "./server/routes/problem-routes";
+import { handlePublicStatsRoutes, handleStatsRoutes } from "./server/routes/stats-routes";
 import { handleTestClientRoute } from "./server/routes/test-client-route";
 import { ApiException } from "./server/types";
 import { createWsRuntime } from "./server/ws-runtime";
@@ -74,6 +78,10 @@ async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Pro
     return;
   }
 
+  if (await handlePublicStatsRoutes(req, url, res)) {
+    return;
+  }
+
   const auth = await requireAuth(req);
   const currentUser = auth.session.user;
 
@@ -90,6 +98,22 @@ async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Pro
   }
 
   if (await handleReportsAdminRoutes(req.method, url, res, currentUser, req)) {
+    return;
+  }
+
+  if (await handlePrivateMatchRoutes(req.method, url, res, currentUser, req)) {
+    return;
+  }
+
+  if (await handleFocusLanguageRoutes(req.method, url, res, currentUser, req)) {
+    return;
+  }
+
+  if (await handleStatsRoutes(req.method, url, res, currentUser, req)) {
+    return;
+  }
+
+  if (await handleProblemRoutes(req.method, url, res, currentUser, req)) {
     return;
   }
 

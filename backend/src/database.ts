@@ -59,16 +59,79 @@ export {
 } from "./db/report-repo";
 
 export {
+  ACHIEVEMENT_META,
+  awardAchievement,
+  checkAndAwardAchievements,
+  getUserAchievements,
+  hasAchievement,
+} from "./db/achievement-repo";
+
+export type { MatchAchievementContext } from "./db/achievement-repo";
+
+export {
+  addTestCase,
   cancelMatch,
   completeMatch,
+  createProblem,
   createMatchForUsers,
   createSubmission,
   findProblemForMatch,
   getDraft,
   getLeaderboard,
+  getLeaderboardWithStats,
   getMatchById,
   getMatchHistory,
+  getTestCases,
+  getUserLeaderboardPosition,
   saveDraft,
+  setMatchParticipantLanguage,
   updateMatchParticipantProgress,
   updateSubmission,
 } from "./db/match-repo";
+
+export type { LeaderboardEntry } from "./db/match-repo";
+
+export {
+  cancelPendingLobby,
+  createPrivateMatch,
+  getPrivateMatchLobbies,
+  validatePrivateMatchJoin,
+} from "./db/private-match-repo";
+
+export {
+  recordFocusSession,
+  getFocusByDayOfWeek,
+  getFocusByCategory,
+} from "./db/focus-repo";
+
+export {
+  getLanguageWinLoss,
+  getLanguageTestCasesPassed,
+  getTopLanguages,
+} from "./db/language-stats-repo";
+
+export {
+  createEvaluation,
+  getStudentCodeHistory,
+  getStudentEvaluations,
+  getStudentPerformanceScore,
+} from "./db/evaluation-repo";
+
+export {
+  getCategorySuccessRates,
+  getHardProblemSolveTimeDistribution,
+  getMedianElo,
+} from "./db/stats-repo";
+
+export {
+  addTestCaseToSubmission,
+  approveSubmission,
+  getMySubmissions,
+  getPendingSubmissions,
+  getSubmissionForEdit,
+  getTestCaseCount,
+  rejectSubmission,
+  sanitizeTestData,
+  submitProblem,
+  updateSubmission as updateProblemSubmission,
+} from "./db/problem-submission-repo";

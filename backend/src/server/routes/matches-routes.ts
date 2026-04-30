@@ -3,8 +3,10 @@ import type { URL } from "node:url";
 import {
   getDraft,
   getLeaderboard,
+  getLeaderboardWithStats,
   getMatchById,
   getMatchHistory,
+  getUserLeaderboardPosition,
   saveDraft,
   type SafeUser,
 } from "../../database";
@@ -61,11 +63,16 @@ export async function handleMatchesRoutes(
 
   if (method === "GET" && url.pathname === "/api/leaderboard") {
     const limit = parsePositiveInt(url.searchParams.get("limit"), 100, 1, 500);
-    const sortByRaw = url.searchParams.get("sortBy") || "elo";
-    const sortBy = sortByRaw === "createdAt" ? "createdAt" : "elo";
+    const userId = getTrimmedString(url.searchParams.get("userId")) || undefined;
 
-    const leaderboard = await getLeaderboard(limit, sortBy);
-    sendSuccess(res, 200, leaderboard);
+    const leaderboard = await getLeaderboardWithStats(limit);
+
+    let myPosition: { rank: number; elo: number; winRate: number } | null = null;
+    if (userId) {
+      myPosition = await getUserLeaderboardPosition(userId);
+    }
+
+    sendSuccess(res, 200, { leaderboard, ...(myPosition ? { myPosition } : {}) });
     return true;
   }
 

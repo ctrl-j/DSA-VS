@@ -1,0 +1,156 @@
+.gstats-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: calc(100vh - 48px);
+  padding: var(--space-10) var(--space-6);
+}
+
+.gstats__title {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: var(--space-8);
+}
+
+.gstats__container {
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* ---- Section ---- */
+.gstats__section {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.gstats__section--centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gstats__section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.gstats__section-header .gstats__section-title {
+  margin-bottom: 0;
+}
+
+.gstats__section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: var(--space-5);
+}
+
+/* ---- Filter ---- */
+.gstats__filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.gstats__filter-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.gstats__filter-select {
+  appearance: none;
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-5) var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a8580'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  min-width: 150px;
+}
+
+.gstats__filter-select:hover {
+  border-color: var(--border-strong);
+}
+
+.gstats__filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.gstats__filter-select option {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* ---- Stat card (Median Elo) ---- */
+.gstats__stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-8) var(--space-10);
+}
+
+.gstats__stat-value {
+  font-size: 4rem;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: var(--space-2);
+}
+
+.gstats__stat-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* ---- States ---- */
+.gstats__loading,
+.gstats__empty {
+  text-align: center;
+  padding: var(--space-10);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.gstats__error {
+  text-align: center;
+  padding: var(--space-10);
+  color: var(--error);
+  font-size: var(--text-sm);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 500px) {
+  .gstats__section-header {
+    flex-direction: column;
+  }
+
+  .gstats__stat-value {
+    font-size: 3rem;
+  }
+}

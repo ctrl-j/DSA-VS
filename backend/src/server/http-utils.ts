@@ -219,6 +219,18 @@ export function mapKnownError(error: unknown): ApiException {
     if (error.message === "CANNOT_REPORT_SELF") {
       return new ApiException(400, "VALIDATION_ERROR", "you cannot report yourself.");
     }
+    if (error.message === "MATCH_NOT_FOUND") {
+      return new ApiException(404, "NOT_FOUND", "private match not found.");
+    }
+    if (error.message === "INVALID_PASSWORD") {
+      return new ApiException(403, "FORBIDDEN", "incorrect room password.");
+    }
+    if (error.message === "CANNOT_JOIN_OWN_LOBBY") {
+      return new ApiException(400, "VALIDATION_ERROR", "you cannot join your own lobby.");
+    }
+    if (error.message === "INVALID_SCORE") {
+      return new ApiException(400, "VALIDATION_ERROR", "score must be between 0 and 100.");
+    }
 
     return new ApiException(500, "INTERNAL_ERROR", "Unexpected server error.", {
       message: error.message,

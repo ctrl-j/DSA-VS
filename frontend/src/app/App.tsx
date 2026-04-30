@@ -1,8 +1,11 @@
 import "../styles/theme.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "../providers/AuthProvider";
-import { WebSocketProvider } from "../providers/WebSocketProvider";
+import { WebSocketProvider, useWs } from "../providers/WebSocketProvider";
 import { NavBar } from "../components/layout/NavBar";
+import { NotificationToast } from "../components/layout/NotificationToast";
+import type { WsMatchFound } from "../types";
 import { LoginPage } from "../pages/LoginPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { DashboardPage } from "../pages/DashboardPage";
@@ -22,6 +25,17 @@ import { AdminBugReportsPage } from "../pages/AdminBugReportsPage";
 import { AdminReportsPage } from "../pages/AdminReportsPage";
 import { HistoryPage } from "../pages/HistoryPage";
 import { StatsPage } from "../pages/StatsPage";
+import { LeaderboardPage } from "../pages/LeaderboardPage";
+import { SubmitProblemPage } from "../pages/SubmitProblemPage";
+import { TestCaseSubmitPage } from "../pages/TestCaseSubmitPage";
+import { MySubmissionsPage } from "../pages/MySubmissionsPage";
+import { EditProblemPage } from "../pages/EditProblemPage";
+import { AdminReviewPage } from "../pages/AdminReviewPage";
+import { CodeHistoryPage } from "../pages/CodeHistoryPage";
+import { GlobalStatsPage } from "../pages/GlobalStatsPage";
+import { PrivateMatchPage } from "../pages/PrivateMatchPage";
+import { FocusDashboardPage } from "../pages/FocusDashboardPage";
+import { LanguageStatsPage } from "../pages/LanguageStatsPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -44,12 +58,32 @@ function RootRedirect() {
   return <Navigate to={user ? "/dashboard" : "/login"} replace />;
 }
 
+/** Global listener: navigates to match page when match.found fires (e.g. from a challenge). */
+function MatchFoundRedirector() {
+  const { subscribe } = useWs();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const unsub = subscribe("match.found", (payload: WsMatchFound) => {
+      // Don't redirect if already on the queue page (it has its own handler with a countdown)
+      if (location.pathname === "/queue") return;
+      navigate(`/match/${payload.matchId}`);
+    });
+    return unsub;
+  }, [subscribe, navigate, location.pathname]);
+
+  return null;
+}
+
 function AppRoutes() {
   const { token } = useAuth();
 
   return (
     <WebSocketProvider token={token}>
+      <MatchFoundRedirector />
       <NavBar />
+      <NotificationToast />
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
@@ -66,12 +100,23 @@ function AppRoutes() {
         <Route path="/elo" element={<ProtectedRoute><EloPage /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
         <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
+        <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
+        <Route path="/problems/submit" element={<ProtectedRoute><SubmitProblemPage /></ProtectedRoute>} />
+        <Route path="/problems/mine" element={<ProtectedRoute><MySubmissionsPage /></ProtectedRoute>} />
+        <Route path="/problems/:id/edit" element={<ProtectedRoute><EditProblemPage /></ProtectedRoute>} />
+        <Route path="/problems/:id/test-cases" element={<ProtectedRoute><TestCaseSubmitPage /></ProtectedRoute>} />
+        <Route path="/code-history" element={<ProtectedRoute><CodeHistoryPage /></ProtectedRoute>} />
+        <Route path="/global-stats" element={<GlobalStatsPage />} />
+        <Route path="/private-match" element={<ProtectedRoute><PrivateMatchPage /></ProtectedRoute>} />
+        <Route path="/focus" element={<ProtectedRoute><FocusDashboardPage /></ProtectedRoute>} />
+        <Route path="/language-stats" element={<ProtectedRoute><LanguageStatsPage /></ProtectedRoute>} />
         <Route path="/report-user" element={<ProtectedRoute><ReportUserPage /></ProtectedRoute>} />
         <Route path="/report-bug" element={<ProtectedRoute><ReportBugPage /></ProtectedRoute>} />
 
         <Route path="/admin/chats" element={<AdminRoute><AdminChatsPage /></AdminRoute>} />
         <Route path="/admin/bug-reports" element={<AdminRoute><AdminBugReportsPage /></AdminRoute>} />
         <Route path="/admin/reports/users" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
+        <Route path="/admin/problems" element={<AdminRoute><AdminReviewPage /></AdminRoute>} />
 
         <Route path="/match/:matchId" element={<ProtectedRoute><MatchPage /></ProtectedRoute>} />
 

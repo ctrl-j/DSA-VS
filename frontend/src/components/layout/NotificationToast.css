@@ -1,0 +1,133 @@
+/* Reuses the same toast pattern as FriendsPanel chat notification */
+.notification-toast {
+  position: fixed;
+  top: 60px;
+  right: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-5);
+  min-width: 220px;
+  max-width: 340px;
+  z-index: var(--z-toast);
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: toast-slide-in 0.3s ease, toast-fade-out 0.5s ease 3.5s forwards;
+}
+
+/* Color-coded left indicator bar */
+.notification-toast__indicator {
+  width: 3px;
+  align-self: stretch;
+  border-radius: 2px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.notification-toast--chat-message .notification-toast__indicator {
+  background: var(--accent);
+}
+
+.notification-toast--friend-online .notification-toast__indicator {
+  background: var(--success);
+}
+
+.notification-toast--friend-offline .notification-toast__indicator {
+  background: var(--text-muted);
+}
+
+.notification-toast--challenge-received .notification-toast__indicator {
+  background: var(--warning);
+}
+
+.notification-toast--achievement-unlocked .notification-toast__indicator {
+  background: var(--accent-bright);
+}
+
+.notification-toast--achievement-unlocked .notification-toast__title {
+  color: var(--accent-bright);
+}
+
+.notification-toast__content {
+  min-width: 0;
+}
+
+.notification-toast__title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.notification-toast--friend-online .notification-toast__title {
+  color: var(--success);
+}
+
+.notification-toast--challenge-received .notification-toast__title {
+  color: var(--warning);
+}
+
+.notification-toast__body {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Challenge toast: no auto-fade, stays until user acts */
+.notification-toast--interactive {
+  animation: toast-slide-in 0.3s ease;
+  cursor: default;
+}
+
+.notification-toast__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.notification-toast__btn {
+  padding: 4px 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.notification-toast__btn:hover {
+  opacity: 0.85;
+}
+
+.notification-toast__btn--accept {
+  background: var(--success);
+  color: var(--bg-base);
+}
+
+.notification-toast__btn--decline {
+  background: var(--danger, #e53e3e);
+  color: #fff;
+}
+
+/* Reuse the same keyframes already defined in FriendsPanel.css.
+   If FriendsPanel is not loaded, define them here as fallback. */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

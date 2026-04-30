@@ -117,11 +117,7 @@ export function FriendsPanel({ open, onClose }: { open: boolean; onClose: () => 
     }
   }, [messages]);
 
-  // Notification state
-  const [notification, setNotification] = useState<{ from: string; content: string } | null>(null);
-  const notificationTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  // Subscribe to incoming chat messages
+  // Subscribe to incoming chat messages (adds to active chat view)
   useEffect(() => {
     const unsub = subscribe("chat.received", (payload: {
       fromUserId: string;
@@ -143,19 +139,9 @@ export function FriendsPanel({ open, onClose }: { open: boolean; onClose: () => 
 
       // Add to chat if we're in a conversation with this user
       setMessages((prev) => [...prev, newMsg]);
-
-      // Show notification if panel is closed or we're on the friends list
-      const senderFriend = friends.find((f) => f.id === payload.fromUserId);
-      const senderName = senderFriend?.username ?? "Someone";
-
-      if (!open || view !== "chat" || chatTarget?.id !== payload.fromUserId) {
-        setNotification({ from: senderName, content: payload.content });
-        clearTimeout(notificationTimer.current);
-        notificationTimer.current = setTimeout(() => setNotification(null), 4000);
-      }
     });
     return unsub;
-  }, [subscribe, user, open, view, chatTarget, friends]);
+  }, [subscribe, user]);
 
   // Open chat with a friend
   const openChat = useCallback(async (friend: Friend) => {
@@ -204,6 +190,11 @@ export function FriendsPanel({ open, onClose }: { open: boolean; onClose: () => 
       await api("POST", "/api/blocks", { token, body: { blockedUsername: friend.username } });
       fetchData();
     } catch { /* ignore */ }
+  };
+
+  const handleChallenge = (friend: Friend) => {
+    setContextMenu(null);
+    wsSend("challenge.send", { toUsername: friend.username });
   };
 
   const handleRemove = async (friend: Friend) => {
@@ -379,23 +370,12 @@ export function FriendsPanel({ open, onClose }: { open: boolean; onClose: () => 
       {contextMenu && (
         <div className="friends-panel__context" style={{ top: contextMenu.y, left: contextMenu.x }}>
           <button className="friends-panel__context-item" onClick={() => openChat(contextMenu.friend)}>Message</button>
+          <button className="friends-panel__context-item" onClick={() => handleChallenge(contextMenu.friend)}>Challenge</button>
           <button className="friends-panel__context-item friends-panel__context-item--danger" onClick={() => handleBlock(contextMenu.friend)}>Block</button>
           <button className="friends-panel__context-item friends-panel__context-item--danger" onClick={() => handleRemove(contextMenu.friend)}>Remove Friend</button>
         </div>
       )}
 
-      {/* Message notification toast */}
-      {notification && (
-        <div className="friends-panel__toast" onClick={() => {
-          setNotification(null);
-          // Open the panel and chat if we can find the friend
-          const friend = friends.find((f) => f.username === notification.from);
-          if (friend) openChat(friend);
-        }}>
-          <div className="friends-panel__toast-from">{notification.from}</div>
-          <div className="friends-panel__toast-content">{notification.content}</div>
-        </div>
-      )}
     </>
   );
 }

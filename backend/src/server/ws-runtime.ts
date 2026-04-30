@@ -5,16 +5,27 @@ import { MatchMode } from "@prisma/client";
 import { WebSocket, WebSocketServer } from "ws";
 import {
   cancelMatch,
+  cancelPendingLobby,
+  checkAndAwardAchievements,
   completeMatch,
   createChallenge,
   createMatchForUsers,
   createSubmission,
+  getFriends,
   getMatchById,
   getSessionByToken,
+  getTestCases,
   getUserById,
   getUserByUsername,
+  prisma,
   sendMessage,
 } from "../database";
+import {
+  buildChatNotification,
+  buildChallengeNotification,
+  buildFriendOnlineNotification,
+  buildFriendOfflineNotification,
+} from "../notifications";
 import type { GlobalMatchQueue } from "../global-match-queue";
 import { User } from "../user";
 import { getTrimmedString, isObject, mapKnownError, modeToEnum } from "./http-utils";
@@ -27,6 +38,7 @@ export interface WsRuntime {
   handleUpgrade: (request: IncomingMessage, socket: Socket, head: Buffer) => void;
   getClientCount: () => number;
   endMatchEarly: (matchId: string, reason: string) => Promise<void>;
+  isUserOnline: (userId: string) => boolean;
 }
 
 export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
@@ -36,6 +48,8 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
   const activeMatchTimers = new Map<string, ActiveMatchTimer>();
   // Track pending cancel votes: matchId → userId of the player who requested
   const pendingCancelVotes = new Map<string, string>();
+  // Track pending challenge IDs so they can't be accepted twice
+  const acceptedChallenges = new Set<string>();
 
   function sendWsEvent(socket: LiveWebSocket, event: string, payload: unknown): void {
     if (socket.readyState !== WebSocket.OPEN) {
@@ -70,6 +84,22 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
     existing.delete(socket);
     if (existing.size === 0) {
       socketsByUserId.delete(context.userId);
+      void notifyFriendsOfPresence(context.userId, context.username, false);
+    }
+  }
+
+  async function notifyFriendsOfPresence(userId: string, username: string, online: boolean): Promise<void> {
+    try {
+      const friends = await getFriends(userId);
+      for (const friend of friends) {
+        if (!socketsByUserId.has(friend.id)) continue;
+        const notification = online
+          ? buildFriendOnlineNotification(username, userId)
+          : buildFriendOfflineNotification(username, userId);
+        sendToUser(friend.id, "notification", notification);
+      }
+    } catch (error) {
+      console.error("Failed to notify friends of presence change", error);
     }
   }
 
@@ -125,6 +155,39 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
         reason,
         eloDelta: newEloB - second.startElo,
       });
+
+      // Check and award achievements for both participants
+      try {
+        const totalTestCases = match.problemId
+          ? (await getTestCases(match.problemId, true)).length
+          : 0;
+
+        const achievementCtx = {
+          matchId,
+          winnerUserId,
+          participants: [
+            { userId: first.userId, startElo: first.startElo, endElo: newEloA, passedCount: first.passedCount },
+            { userId: second.userId, startElo: second.startElo, endElo: newEloB, passedCount: second.passedCount },
+          ],
+          totalTestCases,
+          matchStartedAt: match.startedAt ?? new Date(),
+          matchMode: match.mode,
+        };
+
+        const [firstAchievements, secondAchievements] = await Promise.all([
+          checkAndAwardAchievements(first.userId, achievementCtx),
+          checkAndAwardAchievements(second.userId, achievementCtx),
+        ]);
+
+        if (firstAchievements.length > 0) {
+          sendToUser(first.userId, "achievements.unlocked", { achievements: firstAchievements });
+        }
+        if (secondAchievements.length > 0) {
+          sendToUser(second.userId, "achievements.unlocked", { achievements: secondAchievements });
+        }
+      } catch (achErr) {
+        console.error("Failed to check achievements", achErr);
+      }
     } catch (error) {
       console.error("Failed to finalize match", error);
     }
@@ -331,6 +394,13 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
         createdAt: message.createdAt,
       });
 
+      // AC1: Send popup notification to recipient
+      sendToUser(
+        toUserId,
+        "notification",
+        buildChatNotification(context.username, content, message.id)
+      );
+
       sendWsEvent(socket, "chat.received", {
         fromUserId: context.userId,
         messageId: message.id,
@@ -370,17 +440,219 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
 
       const toUserId = toUser.id;
       const challenge = await createChallenge(context.userId, toUserId);
+
       sendToUser(toUserId, "challenge.received", {
         fromUserId: context.userId,
+        fromUsername: context.username,
         messageId: challenge.id,
         createdAt: challenge.createdAt,
       });
+
+      sendToUser(
+        toUserId,
+        "notification",
+        buildChallengeNotification(context.username, context.userId, challenge.id)
+      );
 
       sendWsEvent(socket, "challenge.sent", {
         toUserId,
         messageId: challenge.id,
         createdAt: challenge.createdAt,
       });
+      return;
+    }
+
+    // ---- Challenge accept/decline flow ----
+
+    if (event.event === "challenge.accept") {
+      const messageId = getTrimmedString(isObject(event.payload) ? event.payload.messageId : "");
+      if (!messageId) {
+        sendWsEvent(socket, "error", { code: "VALIDATION_ERROR", message: "messageId is required." });
+        return;
+      }
+
+      if (acceptedChallenges.has(messageId)) {
+        sendWsEvent(socket, "error", { code: "CONFLICT", message: "Challenge already accepted." });
+        return;
+      }
+
+      // Look up the challenge message
+      const challengeMsg = await prisma.message.findUnique({ where: { id: messageId } });
+      if (!challengeMsg || challengeMsg.type !== "CHALLENGE") {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "Challenge not found." });
+        return;
+      }
+
+      // Only the receiver can accept
+      if (challengeMsg.receiverId !== context.userId) {
+        sendWsEvent(socket, "error", { code: "FORBIDDEN", message: "Only the challenged user can accept." });
+        return;
+      }
+
+      acceptedChallenges.add(messageId);
+
+      const challenger = await getUserById(challengeMsg.senderId);
+      const challenged = await getUserById(challengeMsg.receiverId);
+
+      if (!challenger || !challenged) {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "User not found." });
+        return;
+      }
+
+      const match = await createMatchForUsers(
+        { id: challenger.id, elo: challenger.elo },
+        { id: challenged.id, elo: challenged.elo },
+        MatchMode.PRIVATE
+      );
+
+      const startsAt = new Date().toISOString();
+
+      sendToUser(challenger.id, "match.found", {
+        matchId: match.id,
+        opponent: {
+          userId: challenged.id,
+          username: challenged.username,
+          elo: challenged.elo,
+        },
+        problemSummary: match.problem
+          ? {
+              id: match.problem.id,
+              title: match.problem.title,
+              difficulty: match.problem.difficulty,
+              category: match.problem.category,
+            }
+          : null,
+        startsAt,
+      });
+
+      sendToUser(challenged.id, "match.found", {
+        matchId: match.id,
+        opponent: {
+          userId: challenger.id,
+          username: challenger.username,
+          elo: challenger.elo,
+        },
+        problemSummary: match.problem
+          ? {
+              id: match.problem.id,
+              title: match.problem.title,
+              difficulty: match.problem.difficulty,
+              category: match.problem.category,
+            }
+          : null,
+        startsAt,
+      });
+
+      startMatchTimer(match.id, [challenger.id, challenged.id]);
+      return;
+    }
+
+    if (event.event === "challenge.decline") {
+      const messageId = getTrimmedString(isObject(event.payload) ? event.payload.messageId : "");
+      if (!messageId) {
+        sendWsEvent(socket, "error", { code: "VALIDATION_ERROR", message: "messageId is required." });
+        return;
+      }
+
+      const challengeMsg = await prisma.message.findUnique({ where: { id: messageId } });
+      if (!challengeMsg || challengeMsg.type !== "CHALLENGE") {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "Challenge not found." });
+        return;
+      }
+
+      if (challengeMsg.receiverId !== context.userId) {
+        sendWsEvent(socket, "error", { code: "FORBIDDEN", message: "Only the challenged user can decline." });
+        return;
+      }
+
+      // Notify the challenger that their challenge was declined
+      sendToUser(challengeMsg.senderId, "challenge.declined", {
+        messageId,
+        declinedBy: context.username,
+      });
+
+      return;
+    }
+
+    // ---- Private match join (like challenge.accept) ----
+
+    if (event.event === "private.join") {
+      if (!isObject(event.payload)) {
+        sendWsEvent(socket, "error", { code: "VALIDATION_ERROR", message: "payload object is required." });
+        return;
+      }
+
+      const lobbyMatchId = getTrimmedString(event.payload.lobbyMatchId);
+      const hostUserId = getTrimmedString(event.payload.hostUserId);
+      if (!lobbyMatchId || !hostUserId) {
+        sendWsEvent(socket, "error", { code: "VALIDATION_ERROR", message: "lobbyMatchId and hostUserId are required." });
+        return;
+      }
+
+      // Prevent double-join
+      if (acceptedChallenges.has(lobbyMatchId)) {
+        sendWsEvent(socket, "error", { code: "CONFLICT", message: "Lobby already joined." });
+        return;
+      }
+      acceptedChallenges.add(lobbyMatchId);
+
+      const host = await getUserById(hostUserId);
+      const joiner = await getUserById(context.userId);
+
+      if (!host || !joiner) {
+        sendWsEvent(socket, "error", { code: "NOT_FOUND", message: "User not found." });
+        return;
+      }
+
+      // Create a fresh ACTIVE match — same as challenge.accept
+      const match = await createMatchForUsers(
+        { id: host.id, elo: host.elo },
+        { id: joiner.id, elo: joiner.elo },
+        MatchMode.PRIVATE
+      );
+
+      // Cancel the old PENDING lobby
+      await cancelPendingLobby(lobbyMatchId);
+
+      const startsAt = new Date().toISOString();
+
+      sendToUser(host.id, "match.found", {
+        matchId: match.id,
+        opponent: {
+          userId: joiner.id,
+          username: joiner.username,
+          elo: joiner.elo,
+        },
+        problemSummary: match.problem
+          ? {
+              id: match.problem.id,
+              title: match.problem.title,
+              difficulty: match.problem.difficulty,
+              category: match.problem.category,
+            }
+          : null,
+        startsAt,
+      });
+
+      sendToUser(joiner.id, "match.found", {
+        matchId: match.id,
+        opponent: {
+          userId: host.id,
+          username: host.username,
+          elo: host.elo,
+        },
+        problemSummary: match.problem
+          ? {
+              id: match.problem.id,
+              title: match.problem.title,
+              difficulty: match.problem.difficulty,
+              category: match.problem.category,
+            }
+          : null,
+        startsAt,
+      });
+
+      startMatchTimer(match.id, [host.id, joiner.id]);
       return;
     }
 
@@ -548,6 +820,9 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
   }
 
   function bindSocket(socket: LiveWebSocket, context: WsAuthContext): void {
+    // AC2: Check if user was offline before this socket connects
+    const wasOffline = !socketsByUserId.has(context.userId) || socketsByUserId.get(context.userId)!.size === 0;
+
     let userSockets = socketsByUserId.get(context.userId);
     if (!userSockets) {
       userSockets = new Set();
@@ -555,6 +830,11 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
     }
     userSockets.add(socket);
     userIdBySocket.set(socket, context);
+
+    // AC2: Notify friends that this user came online
+    if (wasOffline) {
+      void notifyFriendsOfPresence(context.userId, context.username, true);
+    }
 
     socket.isAlive = true;
     socket.on("pong", () => {
@@ -691,5 +971,6 @@ export function createWsRuntime(globalMatchQueue: GlobalMatchQueue): WsRuntime {
       }
       await finalizeMatch(matchId, reason);
     },
+    isUserOnline: (userId: string) => socketsByUserId.has(userId),
   };
 }

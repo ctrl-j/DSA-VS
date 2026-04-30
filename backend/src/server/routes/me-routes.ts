@@ -2,6 +2,8 @@ import type { ServerResponse } from "node:http";
 import type { URL } from "node:url";
 import {
   changeUserPassword,
+  getUserAchievements,
+  getUserByUsername,
   getUserElo,
   getUserInfo,
   updateProfile,
@@ -71,6 +73,26 @@ export async function handleMeRoutes(
   if (method === "GET" && url.pathname === "/api/me/elo") {
     const elo = await getUserElo(currentUser.id);
     sendSuccess(res, 200, { elo });
+    return true;
+  }
+
+  // Own achievements
+  if (method === "GET" && url.pathname === "/api/me/achievements") {
+    const achievements = await getUserAchievements(currentUser.id);
+    sendSuccess(res, 200, achievements);
+    return true;
+  }
+
+  // Public profile achievements by username
+  const profileAchievementsMatch = url.pathname.match(/^\/api\/users\/([^/]+)\/achievements$/);
+  if (method === "GET" && profileAchievementsMatch) {
+    const username = decodeURIComponent(profileAchievementsMatch[1]);
+    const targetUser = await getUserByUsername(username);
+    if (!targetUser) {
+      throw new ApiException(404, "NOT_FOUND", "user not found.");
+    }
+    const achievements = await getUserAchievements(targetUser.id);
+    sendSuccess(res, 200, achievements);
     return true;
   }
 

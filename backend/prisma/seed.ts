@@ -1,5 +1,7 @@
 import { Difficulty } from "@prisma/client";
+import bcrypt from "bcrypt";
 import { prisma } from "../src/db/client";
+import { SALT_ROUNDS } from "../src/db/common";
 
 // ---------------------------------------------------------------------------
 // LeetCode-style problem definitions with templates, drivers, and test cases.
@@ -1769,6 +1771,23 @@ import java.io.*;`,
 // ---------------------------------------------------------------------------
 
 async function main() {
+  // Seed admin user
+  const existingAdmin = await prisma.user.findUnique({ where: { username: "admin" } });
+  if (!existingAdmin) {
+    const passwordHash = await bcrypt.hash("admin123", SALT_ROUNDS);
+    await prisma.user.create({
+      data: {
+        username: "admin",
+        passwordHash,
+        elo: 1200,
+        isAdmin: true,
+      },
+    });
+    console.log("  ✓ Admin user created (username: admin)\n");
+  } else {
+    console.log("  ✓ Admin user already exists, skipping\n");
+  }
+
   console.log("Seeding problems and test cases...\n");
 
   for (const problem of PROBLEMS) {
