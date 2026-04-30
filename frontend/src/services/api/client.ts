@@ -24,6 +24,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     method: options.method ?? "GET",
     headers: {
       "Content-Type": "application/json",
+      // Bypass ngrok free-tier browser warning page for XHR/fetch requests.
+      "ngrok-skip-browser-warning": "true",
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
     },
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
