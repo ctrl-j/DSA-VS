@@ -1,0 +1,6 @@
+{
+  "name": "dsavs-api",
+  "main": "dsavs-api-worker.js",
+  "compatibility_date": "2026-04-30",
+  "workers_dev": true
+}
