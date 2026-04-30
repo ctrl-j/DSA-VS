@@ -30,7 +30,9 @@ export async function api<T>(
     }
   }
 
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    "ngrok-skip-browser-warning": "true",
+  };
   if (options?.token) {
     headers["Authorization"] = `Bearer ${options.token}`;
   }

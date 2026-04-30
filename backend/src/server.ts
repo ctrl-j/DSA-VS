@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { URL } from "node:url";
 import { ConcurrentClientHandler } from "./concurrent-client-handler";
-import { mapKnownError, requireAuth, sendError, sendSuccess } from "./server/http-utils";
+import { CORS_HEADERS, mapKnownError, requireAuth, sendError, sendSuccess } from "./server/http-utils";
 import { handleAuthRoutes } from "./server/routes/auth-routes";
 import { handleChatChallengeRoutes } from "./server/routes/chat-challenge-routes";
 import { handleFriendsBlocksRoutes } from "./server/routes/friends-blocks-routes";
@@ -44,11 +44,7 @@ async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Pro
   const url = new URL(req.url ?? "/", "http://localhost");
 
   if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    });
+    res.writeHead(204, CORS_HEADERS);
     res.end();
     return;
   }

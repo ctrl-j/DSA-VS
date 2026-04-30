@@ -3,6 +3,12 @@ import { MatchMode } from "@prisma/client";
 import { getSessionByToken, type AuthenticatedSession } from "../database";
 import { ApiErrorBody, ApiException, ApiSuccessBody, JsonObject } from "./types";
 
+export const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,ngrok-skip-browser-warning",
+};
+
 export function sendJson(
   res: ServerResponse,
   statusCode: number,
@@ -10,9 +16,7 @@ export function sendJson(
 ): void {
   res.writeHead(statusCode, {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    ...CORS_HEADERS,
   });
   res.end(JSON.stringify(payload));
 }

@@ -8,7 +8,21 @@ interface WsContextValue {
 
 const WsContext = createContext<WsContextValue | null>(null);
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3000/ws";
+function resolveWsUrl(rawWsUrl?: string, apiBaseUrl?: string): string {
+  const rawUrl = rawWsUrl || apiBaseUrl?.replace(/^http/, "ws") || "ws://localhost:3000";
+
+  try {
+    const url = new URL(rawUrl);
+    if (!url.pathname || url.pathname === "/") {
+      url.pathname = "/ws";
+    }
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return "ws://localhost:3000/ws";
+  }
+}
+
+const WS_URL = resolveWsUrl(import.meta.env.VITE_WS_URL, import.meta.env.VITE_API_BASE_URL);
 const RECONNECT_DELAY = 2000;
 
 export function WebSocketProvider({ token, children }: { token: string | null; children: ReactNode }) {
